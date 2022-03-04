@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		315B3FBB23A35A1000290055 /* PRHMD5Context.m in Sources */ = {isa = PBXBuildFile; fileRef = 315B3FBA23A35A1000290055 /* PRHMD5Context.m */; };
 		31BEBBD21A06A08A001E3F8F /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 31BEBBD11A06A08A001E3F8F /* Foundation.framework */; };
 		31BEBBD51A06A08A001E3F8F /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 31BEBBD41A06A08A001E3F8F /* main.m */; };
 		31BEBBD91A06A08A001E3F8F /* dd_parallel.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = 31BEBBD81A06A08A001E3F8F /* dd_parallel.1 */; };
@@ -26,6 +27,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		315B3FB923A35A1000290055 /* PRHMD5Context.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PRHMD5Context.h; sourceTree = "<group>"; };
+		315B3FBA23A35A1000290055 /* PRHMD5Context.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PRHMD5Context.m; sourceTree = "<group>"; };
 		31BEBBCE1A06A08A001E3F8F /* dd-parallel */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "dd-parallel"; sourceTree = BUILT_PRODUCTS_DIR; };
 		31BEBBD11A06A08A001E3F8F /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		31BEBBD41A06A08A001E3F8F /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
@@ -74,6 +77,8 @@
 			isa = PBXGroup;
 			children = (
 				31BEBBD41A06A08A001E3F8F /* main.m */,
+				315B3FB923A35A1000290055 /* PRHMD5Context.h */,
+				315B3FBA23A35A1000290055 /* PRHMD5Context.m */,
 				31BEBBD81A06A08A001E3F8F /* dd_parallel.1 */,
 				31BEBBD61A06A08A001E3F8F /* Supporting Files */,
 			);
@@ -140,6 +145,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				31BEBBD51A06A08A001E3F8F /* main.m in Sources */,
+				315B3FBB23A35A1000290055 /* PRHMD5Context.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -251,6 +257,7 @@
 				31BEBBDE1A06A08A001E3F8F /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

@@ -8,9 +8,8 @@
 
 #import <Foundation/Foundation.h>
 #include <sysexits.h>
-#if CHECK_MD5s
-#include <CommonCrypto/CommonCrypto.h>
-#endif
+
+#import "PRHMD5Context.h"
 
 #define MILLIONS(a,b,c) a##b##c
 static const size_t kBufferSize = MILLIONS(10,000,000);
@@ -20,12 +19,37 @@ static const size_t kBufferSize = MILLIONS(10,000,000);
 static const bool verbose = false;
 
 int main(int argc, char *argv[]) {
-	if (argc < 3 || argc > 5) {
-		bool justAskingForHelp = (argc <= 1);
+	bool justAskingForHelp = false;
+	if (argc < 2) {
+	presentHelp:
 		fprintf(justAskingForHelp ? stdout : stderr,
 			"Usage: %s in-file out-file\n",
 			argv[0] ?: "dd-parallel");
 		return justAskingForHelp ? EXIT_SUCCESS : EXIT_FAILURE;
+	}
+	if (strcmp(argv[1], "--help") == 0) {
+		justAskingForHelp = true;
+		goto presentHelp;
+	}
+
+	bool checkMD5 = false;
+	char const *inputPath, *outputPath;
+	if (strcmp(argv[1], "--md5") == 0) {
+		if (argc < 4) {
+			//dd-parallel --md5 inputPath outputPath
+			goto presentHelp;
+		}
+		checkMD5 = true;
+		inputPath = argv[2];
+		outputPath = argv[3];
+	} else {
+		if (argc < 3) {
+			//dd-parallel inputPath outputPath
+			goto presentHelp;
+		}
+		checkMD5 = false;
+		inputPath = argv[1];
+		outputPath = argv[2];
 	}
 
 	@autoreleasepool {
@@ -40,8 +64,16 @@ int main(int argc, char *argv[]) {
 
 		dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
 
-		int inFD = open(argv[1], O_RDONLY);
-		int outFD = open(argv[2], O_WRONLY | O_TRUNC | O_EXLOCK);
+		int inFD = open(inputPath, O_RDONLY);
+		if (inFD < 0) {
+			NSLog(@"Couldn't open %s: %s\n", inputPath, strerror(errno));
+			return EX_NOINPUT;
+		}
+		int outFD = open(outputPath, O_WRONLY | O_TRUNC | O_EXLOCK);
+		if (outFD < 0) {
+			NSLog(@"Couldn't open %s: %s\n", outputPath, strerror(errno));
+			return EX_CANTCREAT;
+		}
 
 		fcntl(inFD, F_NOCACHE, 1);
 		fcntl(inFD, F_RDAHEAD, 1);
@@ -51,12 +83,9 @@ int main(int argc, char *argv[]) {
 		NSTimeInterval start = [NSDate timeIntervalSinceReferenceDate];
 		__block NSTimeInterval lastRateLogDate = 0.0;
 
-#if CHECK_MD5s
-		CC_MD5_CTX readMD5Context, writeMD5Context;
-		CC_MD5_Init(&readMD5Context);
-		CC_MD5_Init(&writeMD5Context);
-		unsigned char readMD5Digest[CC_MD5_DIGEST_LENGTH];
-#endif
+		PRHMD5Context *_Nonnull const readMD5Context = [PRHMD5Context new], *_Nonnull const writeMD5Context = [PRHMD5Context new];
+		unsigned char readMD5Digest[PRHMD5DigestNumberOfBytes];
+		const unsigned char *readMD5DigestPtr = readMD5Digest;
 
 		int readNumber = 0;
 		int writeNumber = 0;
@@ -65,26 +94,39 @@ int main(int argc, char *argv[]) {
 			const void *currentBuffer = buffers[currentBufferIdx];
 			currentBufferIdx = ! currentBufferIdx;
 
-#if CHECK_MD5s
-			CC_MD5_Update(&readMD5Context, currentBuffer, (CC_LONG)amtRead);
-			CC_MD5_Final(readMD5Digest, &readMD5Context);
-			NSData *readMD5Data = [NSData dataWithBytes:readMD5Digest length:CC_MD5_DIGEST_LENGTH];
-#endif
+			if (checkMD5) {
+				[readMD5Context updateWithBytes:currentBuffer length:amtRead];
+				[readMD5Context peekAtDigestBytes:readMD5Digest];
+			}
 
 			if (verbose) {
 				++readNumber;
 				dispatch_sync(logQueue, ^{
-					fprintf(stderr, "Read number #%d; first bytes are 0x%02x%02x%02x%02x\n",
+					fprintf(stderr, "Read number #%d; first bytes are 0x%02hhx%02hhx%02hhx%02hhx\n",
 						readNumber,
 						((const char *)currentBuffer)[0], ((const char *)currentBuffer)[1], ((const char *)currentBuffer)[2], ((const char *)currentBuffer)[3]
 					);
+					if (checkMD5) {
+						fprintf(stderr, "Read number #%d; first bytes of read MD5 are 0x%02hhx%02hhx%02hhx%02hhx\n",
+								readNumber,
+								readMD5DigestPtr[0], readMD5DigestPtr[1], readMD5DigestPtr[2], readMD5DigestPtr[3]
+								);
+					}
 				});
 				++writeNumber;
 			}
+
+			/*
+			//If there's a write in progress, wait until it finishes before we schedule this write and then come back around for another read.
+			//If there's no write in progress, this will return immediately.
+			dispatch_barrier_sync(writeQueue, ^{});
+*/
+			NSData *frozenReadDigestBytes = [NSData dataWithBytes:readMD5Digest length:PRHMD5DigestNumberOfBytes];
+
 			dispatch_async(writeQueue, ^{
 				if (verbose) {
 					dispatch_sync(logQueue, ^{
-						fprintf(stderr, "Write number #%d; first bytes are 0x%02x%02x%02x%02x\n",
+						fprintf(stderr, "Write number #%d; first bytes are 0x%02hhx%02hhx%02hhx%02hhx\n",
 							writeNumber,
 							((const char *)currentBuffer)[0], ((const char *)currentBuffer)[1], ((const char *)currentBuffer)[2], ((const char *)currentBuffer)[3]
 						);
@@ -95,9 +137,33 @@ int main(int argc, char *argv[]) {
 				const void *bytesYetToBeWritten = currentBuffer;
 				size_t numBytesYetToBeWritten = (size_t)amtRead;
 				while (0 < (thisWrite = write(outFD, bytesYetToBeWritten, numBytesYetToBeWritten))) {
-#if CHECK_MD5s
-					CC_MD5_Update(&writeMD5Context, bytesYetToBeWritten, (CC_LONG)numBytesYetToBeWritten);
-#endif
+					if (checkMD5) {
+						[writeMD5Context updateWithBytes:bytesYetToBeWritten length:thisWrite];
+
+						unsigned char writeMD5Digest[PRHMD5DigestNumberOfBytes];
+						[writeMD5Context peekAtDigestBytes:writeMD5Digest];
+						const unsigned char *writeMD5DigestPtr = writeMD5Digest;
+						if (verbose) {
+							dispatch_sync(logQueue, ^{
+								fprintf(stderr, "Write number #%d; first bytes of write MD5 are 0x%02hhx%02hhx%02hhx%02hhx\n",
+										writeNumber,
+										writeMD5DigestPtr[0], writeMD5DigestPtr[1], writeMD5DigestPtr[2], writeMD5DigestPtr[3]
+										);
+								const unsigned char *readMD5DigestPtr = frozenReadDigestBytes.bytes;
+								fprintf(stderr, "Write number #%d; first bytes of read MD5 are 0x%02hhx%02hhx%02hhx%02hhx\n",
+										writeNumber,
+										readMD5DigestPtr[0], readMD5DigestPtr[1], readMD5DigestPtr[2], readMD5DigestPtr[3]
+										);
+							});
+						}
+						if (0 != memcmp(frozenReadDigestBytes.bytes, writeMD5DigestPtr, PRHMD5DigestNumberOfBytes)) {
+							dispatch_sync(logQueue, ^{
+								fprintf(stderr, "Oh crap! MD5s no longer match between read and write! Bailing now!\n");
+								exit(EXIT_FAILURE);
+							});
+						}
+					}
+
 					amtWritten += thisWrite;
 					bytesYetToBeWritten += thisWrite;
 					numBytesYetToBeWritten -= thisWrite;
@@ -106,27 +172,6 @@ int main(int argc, char *argv[]) {
 					}
 				}
 				totalAmountWritten += amtWritten;
-
-#if CHECK_MD5s
-				unsigned char writeMD5Digest[CC_MD5_DIGEST_LENGTH];
-				const unsigned char *writeMD5DigestPtr = writeMD5Digest;
-				CC_MD5_Final(writeMD5Digest, &writeMD5Context);
-				if (verbose) {
-					dispatch_sync(logQueue, ^{
-						fprintf(stderr, "Write number #%d; first bytes of write MD5 are 0x%02x%02x%02x%02x\n",
-							writeNumber,
-							writeMD5DigestPtr[0], writeMD5DigestPtr[1], writeMD5DigestPtr[2], writeMD5DigestPtr[3]
-						);
-					});
-				}
-				const unsigned char *readMD5DigestPtr = readMD5Data.bytes;
-				if (0 != memcmp(readMD5DigestPtr, writeMD5Digest, CC_MD5_DIGEST_LENGTH)) {
-					dispatch_sync(logQueue, ^{
-						fprintf(stderr, "Oh crap! MD5s no longer match between read and write! Bailing now!\n");
-						exit(EXIT_FAILURE);
-					});
-				}
-#endif
 
 				if (thisWrite < 0) {
 					int writeError = errno;
@@ -154,7 +199,17 @@ int main(int argc, char *argv[]) {
 				exit(EX_IOERR);
 			}
 		}
-		EX_NOINPUT;
+
+		[readMD5Context finalizeAndGetDigestBytes:readMD5Digest];
+		unsigned char writeMD5Digest[PRHMD5DigestNumberOfBytes];
+		[writeMD5Context finalizeAndGetDigestBytes:writeMD5Digest];
+		const unsigned char *writeMD5DigestPtr = writeMD5Digest;
+		if (0 != memcmp(readMD5DigestPtr, writeMD5DigestPtr, PRHMD5DigestNumberOfBytes)) {
+			dispatch_sync(logQueue, ^{
+				fprintf(stderr, "Corruption detected! The MD5 of what was written does not match the MD5 of what was read! YOU SHOULD NOT TRUST THE COPY!!!!\n");
+				exit(EXIT_FAILURE);
+			});
+		}
 	}
     return EXIT_SUCCESS;
 }

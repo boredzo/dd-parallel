@@ -81,7 +81,7 @@ int main(int argc, char *argv[]) {
 
 		__block unsigned long long totalAmountWritten = 0;
 		NSTimeInterval start = [NSDate timeIntervalSinceReferenceDate];
-		__block NSTimeInterval lastRateLogDate = 0.0;
+		NSTimeInterval lastRateLogDate = 0.0;
 
 		PRHMD5Context *_Nonnull const readMD5Context = [PRHMD5Context new];
 		unsigned char readMD5Digest[PRHMD5DigestNumberOfBytes] = { 0 };
@@ -186,9 +186,8 @@ int main(int argc, char *argv[]) {
 			__block ssize_t nextAmtRead = 0;
 			dispatch_async(readQueue, ^{ nextAmtRead = readBlock(readBuffer, readMD5DigestPtr); });
 
-			//If there's a write in progress, wait until it finishes before we schedule this write and then come back around for another read.
-			//If there's no write in progress, this will return immediately.
-			dispatch_barrier_sync(writeQueue, ^{});
+			__block unsigned long long amountWrittenSoFar = 0;
+			dispatch_barrier_sync(writeQueue, ^{ amountWrittenSoFar = totalAmountWritten; });
 
 			if (checkMD5) {
 				const unsigned char *readMD5DigestPtr = frozenReadDigestBytes.bytes;
@@ -216,21 +215,15 @@ int main(int argc, char *argv[]) {
 			}
 
 			NSTimeInterval now = [NSDate timeIntervalSinceReferenceDate];
-			__block NSTimeInterval llrd;
-			dispatch_sync(logQueue, ^{
-				llrd = lastRateLogDate;
-			});
-			if (now - llrd > 2.0) {
+			if (now - lastRateLogDate > 2.0) {
 				dispatch_async(logQueue, ^{
-					__block unsigned long long taw = 0;
-					dispatch_barrier_sync(writeQueue, ^{ taw = totalAmountWritten; });
 					fprintf(stderr, "Bytes copied so far: %'llu.\nTime so far: %f seconds.\nCurrent rate: %f bytes per second.\n",
-						taw,
+						amountWrittenSoFar,
 						now - start,
-						taw / (now - start)
+						amountWrittenSoFar / (now - start)
 					);
-					lastRateLogDate = now;
 				});
+					lastRateLogDate = now;
 			}
 
 			dispatch_barrier_sync(readQueue, ^{});

@@ -48,4 +48,13 @@
 	});
 }
 
+- (NSString *_Nonnull) stringDescribingDigestBytes:(unsigned char *const _Nonnull)bytesPtr {
+	return [NSString stringWithFormat:@"%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
+		 bytesPtr[0],  bytesPtr[1],  bytesPtr[2],  bytesPtr[3],
+		 bytesPtr[4],  bytesPtr[5],  bytesPtr[6],  bytesPtr[7],
+		 bytesPtr[8],  bytesPtr[9], bytesPtr[10], bytesPtr[11],
+		bytesPtr[12], bytesPtr[13], bytesPtr[14], bytesPtr[15]
+	];
+}
+
 @end

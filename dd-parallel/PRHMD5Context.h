@@ -21,5 +21,7 @@ enum {
 //Like finalize but works on a copy of the internal context so as not to prematurely end hashing.
 - (void) peekAtDigestBytes:(unsigned char *_Nonnull)outBytesPtr;
 
+//Convert to a hex representation.
+- (NSString *_Nonnull) stringDescribingDigestBytes:(unsigned char *const _Nonnull)bytesPtr;
 
 @end

@@ -97,7 +97,7 @@ int main(int argc, char *argv[]) {
 		os_log_t signpostLog = os_log_create("org.boredzo.dd-parallel", "signposts");
 
 		ssize_t (^readBlock)(void *currentBuffer, unsigned char *const readMD5DigestPtr) = ^(void *currentBuffer, unsigned char *const readMD5DigestPtr){
-			os_signpost_id_t signpostID = time(NULL);
+			os_signpost_id_t signpostID = os_signpost_id_generate(signpostLog);
 			os_signpost_interval_begin(signpostLog, signpostID, "read", "Read begins");
 			ssize_t const amtRead = read(inFD, currentBuffer, kBufferSize);
 
@@ -131,7 +131,7 @@ int main(int argc, char *argv[]) {
 		};
 
 		void (^writeBlock)(void *currentBuffer, size_t const numBytesToWrite, unsigned char *const writeMD5DigestPtr) = ^(void *currentBuffer, size_t numBytesToWrite, unsigned char *const writeMD5DigestPtr){
-			os_signpost_id_t signpostID = time(NULL);
+			os_signpost_id_t signpostID = os_signpost_id_generate(signpostLog);
 			os_signpost_interval_begin(signpostLog, signpostID, "write", "Write begins");
 			if (verbose) {
 				++writeNumber;

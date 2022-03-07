@@ -8,6 +8,8 @@
 
 #import <Foundation/Foundation.h>
 #include <sysexits.h>
+#import <os/log.h>
+#import <os/signpost.h>
 
 #import "PRHMD5Context.h"
 
@@ -92,8 +94,11 @@ int main(int argc, char *argv[]) {
 
 		__block int readNumber = 0;
 		__block int writeNumber = 0;
+		os_log_t signpostLog = os_log_create("org.boredzo.dd-parallel", "signposts");
 
 		ssize_t (^readBlock)(void *currentBuffer, unsigned char *const readMD5DigestPtr) = ^(void *currentBuffer, unsigned char *const readMD5DigestPtr){
+			os_signpost_id_t signpostID = time(NULL);
+			os_signpost_interval_begin(signpostLog, signpostID, "read", "Read begins");
 			ssize_t const amtRead = read(inFD, currentBuffer, kBufferSize);
 
 			if (checkMD5) {
@@ -121,9 +126,13 @@ int main(int argc, char *argv[]) {
 				}
 			}
 
+			os_signpost_interval_end(signpostLog, signpostID, "read", "Read ends");
 			return amtRead;
 		};
+
 		void (^writeBlock)(void *currentBuffer, size_t const numBytesToWrite, unsigned char *const writeMD5DigestPtr) = ^(void *currentBuffer, size_t numBytesToWrite, unsigned char *const writeMD5DigestPtr){
+			os_signpost_id_t signpostID = time(NULL);
+			os_signpost_interval_begin(signpostLog, signpostID, "write", "Write begins");
 			if (verbose) {
 				++writeNumber;
 				NSString *_Nonnull const message = [NSString stringWithFormat:@"Write number #%d; first bytes are 0x%02hhx%02hhx%02hhx%02hhx",
@@ -170,6 +179,7 @@ int main(int argc, char *argv[]) {
 					exit(EX_IOERR);
 				});
 			}
+			os_signpost_interval_end(signpostLog, signpostID, "write", "Write ends");
 		};
 
 		ssize_t amtRead = readBlock(buffers[currentBufferIdx], readMD5Digest);

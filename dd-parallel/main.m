@@ -20,6 +20,24 @@ static const size_t kBufferSize = MILLIONS(10,000,000);
 
 static const bool verbose = false;
 
+static NSTimeInterval whenCopyingStarted = 0.0;
+static unsigned long long bytesCopiedSoFar = 0;
+static dispatch_queue_t writeQueue = NULL;
+static dispatch_queue_t logQueue = NULL;
+
+static void handleSIGINFO(int signalThatWasCaught) {
+	dispatch_async(writeQueue, ^{
+		NSTimeInterval now = [NSDate timeIntervalSinceReferenceDate];
+		dispatch_async(logQueue, ^{
+			fprintf(stderr, "Bytes copied so far: %'llu.\nTime so far: %f seconds.\nCurrent rate: %f bytes per second.\n",
+				bytesCopiedSoFar,
+				now - whenCopyingStarted,
+				bytesCopiedSoFar / (now - whenCopyingStarted)
+			);
+		});
+	});
+}
+
 int main(int argc, char *argv[]) {
 	bool justAskingForHelp = false;
 	if (argc < 2) {
@@ -54,10 +72,12 @@ int main(int argc, char *argv[]) {
 		outputPath = argv[2];
 	}
 
+	signal(SIGINFO, handleSIGINFO);
+
 	@autoreleasepool {
 		dispatch_queue_t readQueue = dispatch_queue_create("read queue", DISPATCH_QUEUE_SERIAL);
-		dispatch_queue_t writeQueue = dispatch_queue_create("write queue", DISPATCH_QUEUE_SERIAL);
-		dispatch_queue_t logQueue = dispatch_queue_create("log queue", DISPATCH_QUEUE_SERIAL);
+		writeQueue = dispatch_queue_create("write queue", DISPATCH_QUEUE_SERIAL);
+		logQueue = dispatch_queue_create("log queue", DISPATCH_QUEUE_SERIAL);
 
 		void *buffers[2] = {
 			malloc(kBufferSize),
@@ -83,7 +103,7 @@ int main(int argc, char *argv[]) {
 
 		__block unsigned long long totalAmountWritten = 0;
 		NSTimeInterval start = [NSDate timeIntervalSinceReferenceDate];
-		NSTimeInterval lastRateLogDate = 0.0;
+		whenCopyingStarted = start;
 
 		PRHMD5Context *_Nonnull const readMD5Context = [PRHMD5Context new];
 		unsigned char readMD5Digest[PRHMD5DigestNumberOfBytes] = { 0 };
@@ -196,8 +216,7 @@ int main(int argc, char *argv[]) {
 			__block ssize_t nextAmtRead = 0;
 			dispatch_async(readQueue, ^{ nextAmtRead = readBlock(readBuffer, readMD5DigestPtr); });
 
-			__block unsigned long long amountWrittenSoFar = 0;
-			dispatch_barrier_sync(writeQueue, ^{ amountWrittenSoFar = totalAmountWritten; });
+			dispatch_barrier_sync(writeQueue, ^{ bytesCopiedSoFar = totalAmountWritten; });
 
 			if (checkMD5) {
 				const unsigned char *readMD5DigestPtr = frozenReadDigestBytes.bytes;
@@ -222,18 +241,6 @@ int main(int argc, char *argv[]) {
 						exit(EXIT_FAILURE);
 					});
 				}
-			}
-
-			NSTimeInterval now = [NSDate timeIntervalSinceReferenceDate];
-			if (now - lastRateLogDate > 2.0) {
-				dispatch_async(logQueue, ^{
-					fprintf(stderr, "Bytes copied so far: %'llu.\nTime so far: %f seconds.\nCurrent rate: %f bytes per second.\n",
-						amountWrittenSoFar,
-						now - start,
-						amountWrittenSoFar / (now - start)
-					);
-				});
-					lastRateLogDate = now;
 			}
 
 			dispatch_barrier_sync(readQueue, ^{});

@@ -99,8 +99,11 @@ int main(int argc, char *argv[]) {
 			return EX_CANTCREAT;
 		}
 
-		fcntl(inFD, F_NOCACHE, 1);
 		fcntl(inFD, F_RDAHEAD, 1);
+
+		//Without this, between rdisks: ~130 MB/sec.
+		//With this, between rdisks: ~140 MB/sec.
+		fcntl(inFD, F_NOCACHE, 1);
 		fcntl(outFD, F_NOCACHE, 1);
 
 		__block _Atomic unsigned long long totalAmountWritten = 0;

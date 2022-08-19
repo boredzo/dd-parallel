@@ -20,19 +20,21 @@ static const size_t kBufferSize = MILLIONS(10,000,000);
 
 static const bool verbose = false;
 
-static NSTimeInterval whenCopyingStarted = 0.0;
-static unsigned long long bytesCopiedSoFar = 0;
+static _Atomic NSTimeInterval whenCopyingStarted = 0.0;
+static _Atomic unsigned long long bytesCopiedSoFar = 0;
 static dispatch_queue_t writeQueue = NULL;
 static dispatch_queue_t logQueue = NULL;
 
 static void handleSIGINFO(int signalThatWasCaught) {
 	dispatch_async(writeQueue, ^{
 		NSTimeInterval now = [NSDate timeIntervalSinceReferenceDate];
+		NSTimeInterval const localWCS = whenCopyingStarted;
+		unsigned long long const localBCSF = bytesCopiedSoFar;
 		dispatch_async(logQueue, ^{
 			fprintf(stderr, "Bytes copied so far: %'llu.\nTime so far: %f seconds.\nCurrent rate: %f bytes per second.\n",
-				bytesCopiedSoFar,
-				now - whenCopyingStarted,
-				bytesCopiedSoFar / (now - whenCopyingStarted)
+				localBCSF,
+				now - localWCS,
+				localBCSF / (now - localWCS)
 			);
 		});
 	});
@@ -101,9 +103,7 @@ int main(int argc, char *argv[]) {
 		fcntl(inFD, F_RDAHEAD, 1);
 		fcntl(outFD, F_NOCACHE, 1);
 
-		__block unsigned long long totalAmountWritten = 0;
-		NSTimeInterval start = [NSDate timeIntervalSinceReferenceDate];
-		whenCopyingStarted = start;
+		__block _Atomic unsigned long long totalAmountWritten = 0;
 
 		PRHMD5Context *_Nonnull const readMD5Context = [PRHMD5Context new];
 		unsigned char readMD5Digest[PRHMD5DigestNumberOfBytes] = { 0 };
@@ -191,6 +191,7 @@ int main(int argc, char *argv[]) {
 				}
 			}
 			totalAmountWritten += amtWritten;
+			bytesCopiedSoFar = totalAmountWritten;
 
 			if (thisWrite < 0) {
 				int writeError = errno;
@@ -201,6 +202,9 @@ int main(int argc, char *argv[]) {
 			}
 			os_signpost_interval_end(signpostLog, signpostID, "write", "Write ends");
 		};
+
+		NSTimeInterval start = [NSDate timeIntervalSinceReferenceDate];
+		whenCopyingStarted = start;
 
 		ssize_t amtRead = readBlock(buffers[currentBufferIdx], readMD5Digest);
 
@@ -216,7 +220,15 @@ int main(int argc, char *argv[]) {
 			__block ssize_t nextAmtRead = 0;
 			dispatch_async(readQueue, ^{ nextAmtRead = readBlock(readBuffer, readMD5DigestPtr); });
 
-			dispatch_barrier_sync(writeQueue, ^{ bytesCopiedSoFar = totalAmountWritten; });
+			os_signpost_id_t signpostID = os_signpost_id_generate(signpostLog);
+			os_signpost_interval_begin(signpostLog, signpostID, "between", "Between begins");
+
+			//Wait on the read queue first because reads are usually faster than writes, so we'll be doing this wait while we're still writing.
+			dispatch_barrier_sync(readQueue, ^{});
+			amtRead = nextAmtRead;
+
+			//We do need to wait on the write queue too, so we don't get ahead of ourselves.
+			dispatch_barrier_sync(writeQueue, ^{});
 
 			if (checkMD5) {
 				const unsigned char *readMD5DigestPtr = frozenReadDigestBytes.bytes;
@@ -243,8 +255,7 @@ int main(int argc, char *argv[]) {
 				}
 			}
 
-			dispatch_barrier_sync(readQueue, ^{});
-			amtRead = nextAmtRead;
+			os_signpost_interval_end(signpostLog, signpostID, "between", "Between ends");
 		}
 
 		ftruncate(outFD, totalAmountWritten); //May fail if this is a device; we don't care.

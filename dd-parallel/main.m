@@ -128,8 +128,9 @@ int main(int argc, char *argv[]) {
 				[readMD5Context updateWithBytes:currentBuffer length:amtRead];
 			}
 
-			if (verbose) {
 				++readNumber;
+
+			if (verbose) {
 				NSString *_Nonnull const readMessage = [NSString stringWithFormat:@"Read number #%d; first bytes are 0x%02hhx%02hhx%02hhx%02hhx",
 					readNumber,
 					((const char *)currentBuffer)[0], ((const char *)currentBuffer)[1], ((const char *)currentBuffer)[2], ((const char *)currentBuffer)[3]
@@ -137,6 +138,8 @@ int main(int argc, char *argv[]) {
 				dispatch_async(logQueue, ^{
 					fprintf(stderr, "%s\n", readMessage.UTF8String);
 				});
+			}
+
 				if (checkMD5) {
 					[readMD5Context peekAtDigestBytes:readMD5DigestPtr];
 					NSString *_Nonnull const readMD5Message = [NSString stringWithFormat:@"Read number #%d; first bytes of read MD5 are 0x%02hhx%02hhx%02hhx%02hhx",
@@ -147,7 +150,6 @@ int main(int argc, char *argv[]) {
 						fprintf(stderr, "%s\n", readMD5Message.UTF8String);
 					});
 				}
-			}
 
 			os_signpost_interval_end(signpostLog, signpostID, "read", "Read ends");
 			return amtRead;
@@ -156,8 +158,10 @@ int main(int argc, char *argv[]) {
 		void (^writeBlock)(void *currentBuffer, size_t const numBytesToWrite, unsigned char *const writeMD5DigestPtr) = ^(void *currentBuffer, size_t numBytesToWrite, unsigned char *const writeMD5DigestPtr){
 			os_signpost_id_t signpostID = os_signpost_id_generate(signpostLog);
 			os_signpost_interval_begin(signpostLog, signpostID, "write", "Write begins");
-			if (verbose) {
+
 				++writeNumber;
+
+			if (verbose) {
 				NSString *_Nonnull const message = [NSString stringWithFormat:@"Write number #%d; first bytes are 0x%02hhx%02hhx%02hhx%02hhx",
 					writeNumber,
 					((const char *)currentBuffer)[0], ((const char *)currentBuffer)[1], ((const char *)currentBuffer)[2], ((const char *)currentBuffer)[3]

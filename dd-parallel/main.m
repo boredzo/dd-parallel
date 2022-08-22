@@ -201,6 +201,10 @@ int main(int argc, char *argv[]) {
 			}
 			totalAmountWritten += amtWritten;
 			bytesCopiedSoFar = totalAmountWritten;
+			NSTimeInterval const instantAfterWrite = [NSDate timeIntervalSinceReferenceDate];
+			dispatch_async(logQueue, ^{
+				[sProgressReporter recordProgressAsOfInstant:instantAfterWrite cumulativeBytesCopied:bytesCopiedSoFar];
+			});
 
 			if (thisWrite < 0) {
 				int writeError = errno;

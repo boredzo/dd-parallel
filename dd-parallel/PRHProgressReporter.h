@@ -13,6 +13,9 @@
 //Must be a time interval since reference date.
 @property NSTimeInterval whenCopyingStarted;
 
+- (void) recordProgressAsOfInstant:(NSTimeInterval)tisrd
+	cumulativeBytesCopied:(unsigned long long)bytesCopiedSoFar;
+
 - (void) reportProgressAsOfInstant:(NSTimeInterval)tisrd
 	cumulativeBytesCopied:(unsigned long long)bytesCopiedSoFar
 	isFinal:(bool)isFinal;

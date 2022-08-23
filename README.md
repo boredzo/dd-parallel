@@ -26,7 +26,7 @@ The usage is:
 
 	dd-parallel in-file out-file
 	
-in-file and out-file are normally device files such as `/dev/disk1`. I recommend always using `rdisk1` rather than `disk1` to refer to these files, because `disk1` has a kernel buffer in front of it that severely diminishes performance. (It's not meant for this use case.) `rdisk1` accesses the device more directly.
+in-file and out-file are normally device files such as `/dev/rdisk1`. I recommend always using `rdisk1` rather than `disk1` when pointing dd-parallel (or dd for that matter) at such files, because `disk1` has a kernel buffer in front of it that severely diminishes performance. (It's not meant for this use case.) `rdisk1` accesses the device more directly.
 
 **BE VERY CAREFUL WHICH PATHS YOU GIVE IT.** If you are not ABSOLUTELY SURE you've got the right paths, don't use it. Like dd, this is an ion cannon that can and will destroy your data if you point it in the wrong direction.
 

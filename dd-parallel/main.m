@@ -14,7 +14,10 @@
 #import "PRHMD5Context.h"
 
 #define MILLIONS(a,b,c) a##b##c
-static const size_t kBufferSize = MILLIONS(10,000,000);
+//https://lists.apple.com/archives/filesystem-dev/2012/Feb/msg00015.html suggests that the optimal chunk size is somewhere between 128 KiB (USB packet size) and 1 MiB.
+//I've tested 128 KiB, 1 MiB, and 10 MiB (which is what I used to use in an earlier version of this code and had previously been using with dd) and couldn't detect a statistically significant difference. I'd need to graph out the copying speed over time to properly correlate the difference, and it might still be within the margin of error.
+//Absent any conclusive reason to do otherwise, I'm going with the upper bound of the range that (presumably) Apple file-systems engineer gave.
+static const size_t kBufferSize = MILLIONS(1,048,576);
 
 #define ONE_MINUTE_NSEC (60 * NSEC_PER_SEC)
 
@@ -128,7 +131,7 @@ int main(int argc, char *argv[]) {
 				[readMD5Context updateWithBytes:currentBuffer length:amtRead];
 			}
 
-				++readNumber;
+			++readNumber;
 
 			if (verbose) {
 				NSString *_Nonnull const readMessage = [NSString stringWithFormat:@"Read number #%d; first bytes are 0x%02hhx%02hhx%02hhx%02hhx",
@@ -140,16 +143,16 @@ int main(int argc, char *argv[]) {
 				});
 			}
 
-				if (checkMD5) {
-					[readMD5Context peekAtDigestBytes:readMD5DigestPtr];
-					NSString *_Nonnull const readMD5Message = [NSString stringWithFormat:@"Read number #%d; first bytes of read MD5 are 0x%02hhx%02hhx%02hhx%02hhx",
-						readNumber,
-						readMD5DigestPtr[0], readMD5DigestPtr[1], readMD5DigestPtr[2], readMD5DigestPtr[3]
-					];
-					dispatch_async(logQueue, ^{
-						fprintf(stderr, "%s\n", readMD5Message.UTF8String);
-					});
-				}
+			if (checkMD5) {
+				[readMD5Context peekAtDigestBytes:readMD5DigestPtr];
+				NSString *_Nonnull const readMD5Message = [NSString stringWithFormat:@"Read number #%d; first bytes of read MD5 are 0x%02hhx%02hhx%02hhx%02hhx",
+					readNumber,
+					readMD5DigestPtr[0], readMD5DigestPtr[1], readMD5DigestPtr[2], readMD5DigestPtr[3]
+				];
+				dispatch_async(logQueue, ^{
+					fprintf(stderr, "%s\n", readMD5Message.UTF8String);
+				});
+			}
 
 			os_signpost_interval_end(signpostLog, signpostID, "read", "Read ends");
 			return amtRead;
@@ -159,7 +162,7 @@ int main(int argc, char *argv[]) {
 			os_signpost_id_t signpostID = os_signpost_id_generate(signpostLog);
 			os_signpost_interval_begin(signpostLog, signpostID, "write", "Write begins");
 
-				++writeNumber;
+			++writeNumber;
 
 			if (verbose) {
 				NSString *_Nonnull const message = [NSString stringWithFormat:@"Write number #%d; first bytes are 0x%02hhx%02hhx%02hhx%02hhx",

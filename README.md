@@ -1,5 +1,5 @@
-#dd-parallel
-##A fast parallelized block copier for macOS
+# dd-parallel
+## A fast parallelized block copier for macOS
 
 When you want to duplicate an entire drive, you use a block copier like dd that's capable of reading and writing device files and that specializes in streaming data from one to the other.
 

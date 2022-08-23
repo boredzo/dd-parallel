@@ -9,7 +9,10 @@
 #import <Foundation/Foundation.h>
 #include <sysexits.h>
 #import <os/log.h>
+#if INCLUDE_SIGNPOSTS
+//Signposts are a tool for marking up the tool's activity in Instruments. They're very helpful for that purpose, but only available in 10.14 and later.
 #import <os/signpost.h>
+#endif
 
 #import "PRHMD5Context.h"
 #import "PRHProgressReporter.h"
@@ -119,11 +122,15 @@ int main(int argc, char *argv[]) {
 
 		__block int readNumber = 0;
 		__block int writeNumber = 0;
+#if INCLUDE_SIGNPOSTS
 		os_log_t signpostLog = os_log_create("org.boredzo.dd-parallel", "signposts");
+#endif
 
 		ssize_t (^readBlock)(void *currentBuffer, unsigned char *const readMD5DigestPtr) = ^(void *currentBuffer, unsigned char *const readMD5DigestPtr){
+#if INCLUDE_SIGNPOSTS
 			os_signpost_id_t signpostID = os_signpost_id_generate(signpostLog);
 			os_signpost_interval_begin(signpostLog, signpostID, "read", "Read begins");
+#endif
 			ssize_t const amtRead = read(inFD, currentBuffer, kBufferSize);
 
 			if (checkMD5) {
@@ -153,13 +160,17 @@ int main(int argc, char *argv[]) {
 				});
 			}
 
+#if INCLUDE_SIGNPOSTS
 			os_signpost_interval_end(signpostLog, signpostID, "read", "Read ends");
+#endif
 			return amtRead;
 		};
 
 		void (^writeBlock)(void *currentBuffer, size_t const numBytesToWrite, unsigned char *const writeMD5DigestPtr) = ^(void *currentBuffer, size_t numBytesToWrite, unsigned char *const writeMD5DigestPtr){
+#if INCLUDE_SIGNPOSTS
 			os_signpost_id_t signpostID = os_signpost_id_generate(signpostLog);
 			os_signpost_interval_begin(signpostLog, signpostID, "write", "Write begins");
+#endif
 
 			++writeNumber;
 
@@ -213,7 +224,9 @@ int main(int argc, char *argv[]) {
 					exit(EX_IOERR);
 				});
 			}
+#if INCLUDE_SIGNPOSTS
 			os_signpost_interval_end(signpostLog, signpostID, "write", "Write ends");
+#endif
 		};
 
 		NSTimeInterval start = [NSDate timeIntervalSinceReferenceDate];
@@ -233,8 +246,10 @@ int main(int argc, char *argv[]) {
 			__block ssize_t nextAmtRead = 0;
 			dispatch_async(readQueue, ^{ nextAmtRead = readBlock(readBuffer, readMD5DigestPtr); });
 
+#if INCLUDE_SIGNPOSTS
 			os_signpost_id_t signpostID = os_signpost_id_generate(signpostLog);
 			os_signpost_interval_begin(signpostLog, signpostID, "between", "Between begins");
+#endif
 
 			//Wait on the read queue first because reads are usually faster than writes, so we'll be doing this wait while we're still writing.
 			dispatch_barrier_sync(readQueue, ^{});
@@ -268,7 +283,9 @@ int main(int argc, char *argv[]) {
 				}
 			}
 
+#if INCLUDE_SIGNPOSTS
 			os_signpost_interval_end(signpostLog, signpostID, "between", "Between ends");
+#endif
 		}
 
 		ftruncate(outFD, totalAmountWritten); //May fail if this is a device; we don't care.

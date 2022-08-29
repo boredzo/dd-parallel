@@ -189,6 +189,7 @@ static void *write_thread_main(void *restrict arg) {
 		*dirtyBits[curBufferIdx] = false;
 		LOG("Finished writing buffer %d\n", curBufferIdx);
 		int const nextBufferIdx = !curBufferIdx;
+		++*writeGenerations[curBufferIdx];
 		writerState = state_writeFinished;
 		pthread_rwlock_unlock(locks[curBufferIdx]);
 		curBufferIdx = nextBufferIdx;

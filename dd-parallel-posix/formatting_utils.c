@@ -69,19 +69,26 @@ size_t copyIntervalPhrase(char *const _Nonnull dst, double const numSeconds, siz
 	double remainingSeconds = fmod(numSeconds, unitFactors[unitIdx]);
 	size_t len = snprintf(dstptr, dstCapacity - totalLen, "%u %s", (unsigned int)numThisUnit, unitStrings[unitIdx]);
 	totalLen += len;
-	while (remainingSeconds > 0.0 && unitIdx-- > 0) {
+	while (remainingSeconds > 0.0 && unitIdx > 0) {
+		if (unitIdx == 0 && totalLen > 0) break; //Don't use ms if we've already used other units.
 		if (totalLen >= dstCapacity) break;
 		dstptr += len;
-		*dstptr++ = ' ';
+		if (len > 0) {
+			*dstptr++ = ' ';
+			++totalLen;
+		}
 		*dstptr = '\0';
-		++totalLen;
 		if (totalLen >= dstCapacity) break;
 
 		numThisUnit = remainingSeconds / unitFactors[unitIdx];
-		if (numThisUnit == 0) continue; //e.g., 1 hr 3 sec
 		remainingSeconds = fmod(remainingSeconds, unitFactors[unitIdx]);
-		len = snprintf(dstptr, dstCapacity - totalLen, "%u %s", numThisUnit, unitStrings[unitIdx]);
-		totalLen += len;
+		if (numThisUnit == 0) { //e.g., 1 hr 3 sec
+			len = 0;
+		} else {
+			len = snprintf(dstptr, dstCapacity - totalLen, "%u %s", numThisUnit, unitStrings[unitIdx]);
+			totalLen += len;
+		}
+		--unitIdx;
 	}
 
 	return totalLen;

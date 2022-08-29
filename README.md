@@ -16,7 +16,14 @@ On a 2018 MacBook Pro running Catalina, copying between two Seagate 2.5-inch USB
 
 Note that “at the start of a copy” matters because these results were obtained with hard disk drives. Hard drive throughput declines over time from the start of the copy toward the end; I theorize that this is because the drive is progressing from the outside of the platters toward the inside, where track circumference is shorter and thus seeks happen more often, dragging down throughput. (This is apparently [quite normal](https://www.tomshardware.com/reviews/understanding-hard-drive-performance,1557-9.html).)
 
-I have not yet tested with two SSDs. The theoretical maximum of USB 3.0 is 5 Gbps, which is 625 MB/sec; I suspect my hard drives are operating at the limit of a hard drive, not reaching the limits of USB 3. If you try this between two separate SSDs, please let me know the details (makes, models, interface) and the results.
+The theoretical maximum of USB 3.0 is 5 Gbps, which is 625 MB/sec; I suspect my hard drives are operating at the limit of a hard drive, not reaching the limits of USB 3. If you try this between two separate SSDs, please let me know the details (makes, models, interface) and the results.
+
+I've tried two inexpensive 512 GB Inland SSDs from Micro Center. On my 2018 Mac mini running Monterey, with the SSDs plugged directly into the Thunderbolt ports:
+
+- system dd: 370 MiB/sec 
+- dd-parallel: 720 MiB/sec
+
+dd-parallel drives these particular SSDs so hard that they overheat and throttle to roughly 100 GB/sec.
 
 ## How do I use it?
 

@@ -1,5 +1,5 @@
 //
-//  main.m
+//  main.c
 //  dd-parallel-posix
 //
 //  Created by Peter Hosey on 2022-08-28.

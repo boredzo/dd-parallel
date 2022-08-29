@@ -36,13 +36,17 @@
 #	define _Nullable /*nullable*/
 #endif
 
+typedef double time_fractional_t;
+///Returns a number of seconds since… something or other. Whatever CLOCK_UPTIME_RAW counts.
+static time_fractional_t timeWithFraction(void);
+
 #define MILLIONS(a,b,c) a##b##c
 //https://lists.apple.com/archives/filesystem-dev/2012/Feb/msg00015.html suggests that the optimal chunk size is somewhere between 128 KiB (USB packet size) and 1 MiB.
 //I've tested 128 KiB, 1 MiB, and 10 MiB (which is what I used to use in an earlier version of this code and had previously been using with dd) and couldn't detect a statistically significant difference. I'd need to graph out the copying speed over time to properly correlate the difference, and it might still be within the margin of error.
 //Absent any conclusive reason to do otherwise, I'm going with the upper bound of the range that (presumably) Apple file-systems engineer gave.
 static const size_t kBufferSize = MILLIONS(1,048,576);
 
-static clock_t copyStartedTime, copyFinishedTime;
+static time_fractional_t copyStartedTime, copyFinishedTime;
 static unsigned long long totalAmountCopied = 0;
 static int inputFD, outputFD;
 static void *buffer0, *buffer1;
@@ -104,7 +108,7 @@ int main(int argc, const char * argv[]) {
 	free(buffer0);
 
 	ftruncate(outputFD, totalAmountCopied);
-	copyFinishedTime = clock();
+	copyFinishedTime = timeWithFraction();
 	logProgress(true);
 
 	return EXIT_SUCCESS;
@@ -116,7 +120,7 @@ static void *read_thread_main(void *restrict arg) {
 
 	if (pthread_mutex_lock(&initializationLock) == EDEADLK) return "Reader deadlocked on init lock";
 
-	copyStartedTime = clock();
+	copyStartedTime = timeWithFraction();
 	pthread_rwlock_rdlock(&buffer0Lock);
 	LOG("Reading into buffer %d\n", 0);
 	readerState = state_readBegun;
@@ -217,13 +221,20 @@ static void *write_thread_main(void *restrict arg) {
 	return NULL;
 }
 
+#pragma mark -
+
+static time_fractional_t timeWithFraction(void) {
+	struct timespec now;
+	clock_gettime(CLOCK_UPTIME_RAW, &now);
+	return now.tv_sec + now.tv_nsec / 1e9;
+}
+
 static void logProgress(bool const isFinal) {
 	if (readerState == state_beforeFirstRead) {
 		printf("Copy has not started yet.");
 	} else {
-		clock_t const now = isFinal ? copyFinishedTime : clock();
-		clock_t const delta = now - copyStartedTime;
-		double const numSecs = ((double)delta) / CLOCKS_PER_SEC;
+		time_fractional_t const now = isFinal ? copyFinishedTime : timeWithFraction();
+		time_fractional_t const numSecs = now - copyStartedTime;
 		unsigned long long const bytesCopiedSoFar = totalAmountCopied;
 		double const bytesPerSec = bytesCopiedSoFar / numSecs;
 

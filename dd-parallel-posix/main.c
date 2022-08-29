@@ -23,9 +23,9 @@
 #include <stdio.h>
 
 #if SHOW_DEBUG_LOGGING
-#define LOG(...) fprintf(stderr, __VA_ARGS__)
+#	define LOG(...) fprintf(stderr, __VA_ARGS__)
 #else
-#define LOG(...) if (0) 0
+#	define LOG(...) if (0) 0
 #endif
 
 #define MILLIONS(a,b,c) a##b##c

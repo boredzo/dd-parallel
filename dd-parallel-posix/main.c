@@ -19,6 +19,7 @@
 #include <fcntl.h>
 #include <pthread.h>
 #include <semaphore.h>
+#include <signal.h>
 #include <stdio.h>
 
 #if SHOW_DEBUG_LOGGING
@@ -33,6 +34,7 @@
 //Absent any conclusive reason to do otherwise, I'm going with the upper bound of the range that (presumably) Apple file-systems engineer gave.
 static const size_t kBufferSize = MILLIONS(1,048,576);
 
+static clock_t copyStartedTime, copyFinishedTime;
 static off_t totalAmountCopied = 0;
 static int inputFD, outputFD;
 static void *buffer0, *buffer1;
@@ -57,6 +59,8 @@ static enum {
 	state_writeFailed,
 } _Atomic writerState;
 
+static void logProgress(bool const isFinal);
+static void handleSIGINFO(int const signal);
 static void *read_thread_main(void *restrict arg);
 static void *write_thread_main(void *restrict arg);
 
@@ -83,12 +87,15 @@ int main(int argc, const char * argv[]) {
 
 	pthread_create(&write_thread, /*attr*/ NULL, write_thread_main, /*user data*/ NULL);
 
+	signal(SIGINFO, handleSIGINFO);
+
 	void *_Nullable retval;
 	pthread_join(read_thread, &retval);
 	pthread_join(write_thread, &retval);
 	free(buffer1);
 	free(buffer0);
 	ftruncate(outputFD, totalAmountCopied);
+	logProgress(true);
 
 	return EXIT_SUCCESS;
 }
@@ -98,6 +105,8 @@ static void *read_thread_main(void *restrict arg) {
 	if (readerState != state_beforeFirstRead) return "Reader starting in bad state";
 
 	if (pthread_mutex_lock(&initializationLock) == EDEADLK) return "Reader deadlocked on init lock";
+
+	copyStartedTime = clock();
 	pthread_rwlock_rdlock(&buffer0Lock);
 	LOG("Reading into buffer %d\n", 0);
 	readerState = state_readBegun;
@@ -196,4 +205,19 @@ static void *write_thread_main(void *restrict arg) {
 	}
 	LOG("Write loop exiting because readerState is %d", readerState);
 	return NULL;
+}
+
+static void logProgress(bool const isFinal) {
+	if (readerState == state_beforeFirstRead) {
+		printf("Copy has not started yet.");
+	} else {
+		clock_t const now = clock();
+		clock_t const delta = now - copyStartedTime;
+		double const numSecs = ((double)delta) / CLOCKS_PER_SEC;
+		off_t const bytesCopiedSoFar = totalAmountCopied;
+		printf("%s %'llu bytes in %f seconds (%f bytes/sec)", isFinal ? "Copied" : "Have copied", bytesCopiedSoFar, numSecs, bytesCopiedSoFar / numSecs);
+	}
+}
+static void handleSIGINFO(int const signal) {
+	logProgress(false);
 }

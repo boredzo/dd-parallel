@@ -8,6 +8,9 @@
 
 /* Begin PBXBuildFile section */
 		3125057228BBF9A300F9060E /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = 3125057128BBF9A300F9060E /* main.c */; };
+		3125057828BC629400F9060E /* formatting_utils.c in Sources */ = {isa = PBXBuildFile; fileRef = 3125057728BC629400F9060E /* formatting_utils.c */; };
+		3125058028BC636900F9060E /* test.c in Sources */ = {isa = PBXBuildFile; fileRef = 3125057F28BC636900F9060E /* test.c */; };
+		3125058428BC639800F9060E /* formatting_utils.c in Sources */ = {isa = PBXBuildFile; fileRef = 3125057728BC629400F9060E /* formatting_utils.c */; };
 		315B3FBB23A35A1000290055 /* PRHMD5Context.m in Sources */ = {isa = PBXBuildFile; fileRef = 315B3FBA23A35A1000290055 /* PRHMD5Context.m */; };
 		31BEBBD21A06A08A001E3F8F /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 31BEBBD11A06A08A001E3F8F /* Foundation.framework */; };
 		31BEBBD51A06A08A001E3F8F /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 31BEBBD41A06A08A001E3F8F /* main.m */; };
@@ -17,6 +20,15 @@
 
 /* Begin PBXCopyFilesBuildPhase section */
 		3125056D28BBF9A300F9060E /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+		3125057B28BC636900F9060E /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = /usr/share/man/man1/;
@@ -40,6 +52,10 @@
 /* Begin PBXFileReference section */
 		3125056F28BBF9A300F9060E /* dd-parallel-posix */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "dd-parallel-posix"; sourceTree = BUILT_PRODUCTS_DIR; };
 		3125057128BBF9A300F9060E /* main.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
+		3125057628BC629400F9060E /* formatting_utils.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = formatting_utils.h; sourceTree = "<group>"; };
+		3125057728BC629400F9060E /* formatting_utils.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = formatting_utils.c; sourceTree = "<group>"; };
+		3125057D28BC636900F9060E /* dd-parallel-posix-tests */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "dd-parallel-posix-tests"; sourceTree = BUILT_PRODUCTS_DIR; };
+		3125057F28BC636900F9060E /* test.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = test.c; sourceTree = "<group>"; };
 		315B3FB923A35A1000290055 /* PRHMD5Context.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PRHMD5Context.h; sourceTree = "<group>"; };
 		315B3FBA23A35A1000290055 /* PRHMD5Context.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PRHMD5Context.m; sourceTree = "<group>"; };
 		31BEBBCE1A06A08A001E3F8F /* dd-parallel */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "dd-parallel"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -53,6 +69,13 @@
 
 /* Begin PBXFrameworksBuildPhase section */
 		3125056C28BBF9A300F9060E /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		3125057A28BC636900F9060E /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -74,8 +97,18 @@
 			isa = PBXGroup;
 			children = (
 				3125057128BBF9A300F9060E /* main.c */,
+				3125057628BC629400F9060E /* formatting_utils.h */,
+				3125057728BC629400F9060E /* formatting_utils.c */,
 			);
 			path = "dd-parallel-posix";
+			sourceTree = "<group>";
+		};
+		3125057E28BC636900F9060E /* dd-parallel-posix-tests */ = {
+			isa = PBXGroup;
+			children = (
+				3125057F28BC636900F9060E /* test.c */,
+			);
+			path = "dd-parallel-posix-tests";
 			sourceTree = "<group>";
 		};
 		31BEBBC51A06A08A001E3F8F = {
@@ -83,6 +116,7 @@
 			children = (
 				31BEBBD31A06A08A001E3F8F /* dd-parallel */,
 				3125057028BBF9A300F9060E /* dd-parallel-posix */,
+				3125057E28BC636900F9060E /* dd-parallel-posix-tests */,
 				31BEBBD01A06A08A001E3F8F /* Frameworks */,
 				31BEBBCF1A06A08A001E3F8F /* Products */,
 			);
@@ -93,6 +127,7 @@
 			children = (
 				31BEBBCE1A06A08A001E3F8F /* dd-parallel */,
 				3125056F28BBF9A300F9060E /* dd-parallel-posix */,
+				3125057D28BC636900F9060E /* dd-parallel-posix-tests */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -147,6 +182,23 @@
 			productReference = 3125056F28BBF9A300F9060E /* dd-parallel-posix */;
 			productType = "com.apple.product-type.tool";
 		};
+		3125057C28BC636900F9060E /* dd-parallel-posix-tests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 3125058128BC636900F9060E /* Build configuration list for PBXNativeTarget "dd-parallel-posix-tests" */;
+			buildPhases = (
+				3125057928BC636900F9060E /* Sources */,
+				3125057A28BC636900F9060E /* Frameworks */,
+				3125057B28BC636900F9060E /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "dd-parallel-posix-tests";
+			productName = "dd-parallel-posix-tests";
+			productReference = 3125057D28BC636900F9060E /* dd-parallel-posix-tests */;
+			productType = "com.apple.product-type.tool";
+		};
 		31BEBBCD1A06A08A001E3F8F /* dd-parallel */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 31BEBBDC1A06A08A001E3F8F /* Build configuration list for PBXNativeTarget "dd-parallel" */;
@@ -178,6 +230,11 @@
 						DevelopmentTeam = FX6BN52BK9;
 						ProvisioningStyle = Automatic;
 					};
+					3125057C28BC636900F9060E = {
+						CreatedOnToolsVersion = 13.3;
+						DevelopmentTeam = FX6BN52BK9;
+						ProvisioningStyle = Automatic;
+					};
 				};
 			};
 			buildConfigurationList = 31BEBBC91A06A08A001E3F8F /* Build configuration list for PBXProject "dd-parallel" */;
@@ -195,6 +252,7 @@
 			targets = (
 				31BEBBCD1A06A08A001E3F8F /* dd-parallel */,
 				3125056E28BBF9A300F9060E /* dd-parallel-posix */,
+				3125057C28BC636900F9060E /* dd-parallel-posix-tests */,
 			);
 		};
 /* End PBXProject section */
@@ -204,7 +262,17 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3125057828BC629400F9060E /* formatting_utils.c in Sources */,
 				3125057228BBF9A300F9060E /* main.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		3125057928BC636900F9060E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3125058428BC639800F9060E /* formatting_utils.c in Sources */,
+				3125058028BC636900F9060E /* test.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -245,6 +313,52 @@
 			name = Debug;
 		};
 		3125057428BBF9A300F9060E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEVELOPMENT_TEAM = FX6BN52BK9;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				MACOSX_DEPLOYMENT_TARGET = 12.3;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+		3125058228BC636900F9060E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_STYLE = Automatic;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = FX6BN52BK9;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				MACOSX_DEPLOYMENT_TARGET = 12.3;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		3125058328BC636900F9060E /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ANALYZER_NONNULL = YES;
@@ -394,6 +508,15 @@
 			buildConfigurations = (
 				3125057328BBF9A300F9060E /* Debug */,
 				3125057428BBF9A300F9060E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		3125058128BC636900F9060E /* Build configuration list for PBXNativeTarget "dd-parallel-posix-tests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3125058228BC636900F9060E /* Debug */,
+				3125058328BC636900F9060E /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

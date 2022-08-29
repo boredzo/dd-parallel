@@ -28,6 +28,11 @@
 #	define LOG(...) if (0) 0
 #endif
 
+#if ! __has_extension(nullability)
+#	define _Nonnull /*non-null*/
+#	define _Nullable /*nullable*/
+#endif
+
 #define MILLIONS(a,b,c) a##b##c
 //https://lists.apple.com/archives/filesystem-dev/2012/Feb/msg00015.html suggests that the optimal chunk size is somewhere between 128 KiB (USB packet size) and 1 MiB.
 //I've tested 128 KiB, 1 MiB, and 10 MiB (which is what I used to use in an earlier version of this code and had previously been using with dd) and couldn't detect a statistically significant difference. I'd need to graph out the copying speed over time to properly correlate the difference, and it might still be within the margin of error.

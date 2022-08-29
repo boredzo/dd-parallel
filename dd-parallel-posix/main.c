@@ -35,7 +35,7 @@
 static const size_t kBufferSize = MILLIONS(1,048,576);
 
 static clock_t copyStartedTime, copyFinishedTime;
-static off_t totalAmountCopied = 0;
+static unsigned long long totalAmountCopied = 0;
 static int inputFD, outputFD;
 static void *buffer0, *buffer1;
 static bool _Atomic buffer0Dirty = true, buffer1Dirty = true; //true when there is data here that has not been written. Set to false by the writer and set to true again by the writer. When both are false, the writer thread exits.
@@ -214,7 +214,7 @@ static void logProgress(bool const isFinal) {
 		clock_t const now = clock();
 		clock_t const delta = now - copyStartedTime;
 		double const numSecs = ((double)delta) / CLOCKS_PER_SEC;
-		off_t const bytesCopiedSoFar = totalAmountCopied;
+		unsigned long long const bytesCopiedSoFar = totalAmountCopied;
 		printf("%s %'llu bytes in %f seconds (%f bytes/sec)", isFinal ? "Copied" : "Have copied", bytesCopiedSoFar, numSecs, bytesCopiedSoFar / numSecs);
 	}
 }

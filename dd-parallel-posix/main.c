@@ -248,6 +248,8 @@ static void logProgress(bool const isFinal) {
 		messageLen += strlcat(dst, " in ", maxMessageCapacity - messageLen);
 		if (messageLen >= maxMessageLen) goto printMessage;
 		dst = message + messageLen;
+//		messageLen += snprintf(dst, maxMessageCapacity - messageLen, "%f seconds = ", numSecs);
+//		dst = message + messageLen;
 		messageLen += copyIntervalPhrase(dst, numSecs, maxMessageCapacity - messageLen);
 		if (messageLen >= maxMessageLen) goto printMessage;
 		dst = message + messageLen;

@@ -23,7 +23,7 @@ I've tried two inexpensive 512 GB Inland SSDs from Micro Center. On my 2018 Mac 
 - system dd: 370 MiB/sec 
 - dd-parallel: 720 MiB/sec
 
-dd-parallel drives these particular SSDs so hard that they overheat and throttle to roughly 100 GB/sec.
+dd-parallel drives these particular SSDs so hard that they overheat and throttle to roughly 100 MiB/sec.
 
 ## How do I use it?
 

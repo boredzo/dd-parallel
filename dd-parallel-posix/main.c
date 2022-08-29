@@ -15,12 +15,15 @@
 #include <sys/errno.h>
 #include <sysexits.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <pthread.h>
 #include <semaphore.h>
 #include <signal.h>
 #include <stdio.h>
+
+#include "formatting_utils.h"
 
 #if SHOW_DEBUG_LOGGING
 #	define LOG(...) fprintf(stderr, __VA_ARGS__)
@@ -99,7 +102,9 @@ int main(int argc, const char * argv[]) {
 	pthread_join(write_thread, &retval);
 	free(buffer1);
 	free(buffer0);
+
 	ftruncate(outputFD, totalAmountCopied);
+	copyFinishedTime = clock();
 	logProgress(true);
 
 	return EXIT_SUCCESS;
@@ -216,11 +221,36 @@ static void logProgress(bool const isFinal) {
 	if (readerState == state_beforeFirstRead) {
 		printf("Copy has not started yet.");
 	} else {
-		clock_t const now = clock();
+		clock_t const now = isFinal ? copyFinishedTime : clock();
 		clock_t const delta = now - copyStartedTime;
 		double const numSecs = ((double)delta) / CLOCKS_PER_SEC;
 		unsigned long long const bytesCopiedSoFar = totalAmountCopied;
-		printf("%s %'llu bytes in %f seconds (%f bytes/sec)", isFinal ? "Copied" : "Have copied", bytesCopiedSoFar, numSecs, bytesCopiedSoFar / numSecs);
+		double const bytesPerSec = bytesCopiedSoFar / numSecs;
+
+		enum { maxMessageLen = 255, maxMessageCapacity };
+		char message[maxMessageCapacity] = { 0 };
+		size_t messageLen = strlcpy(message, isFinal ? "Copied " : "Have copied ", maxMessageCapacity);
+		char *_Nonnull dst = message + messageLen;
+		messageLen += copyByteCountPhrase(dst, bytesCopiedSoFar, maxMessageCapacity - messageLen);
+		if (messageLen >= maxMessageLen) goto printMessage;
+		dst = message + messageLen;
+		messageLen += strlcat(dst, " in ", maxMessageCapacity - messageLen);
+		if (messageLen >= maxMessageLen) goto printMessage;
+		dst = message + messageLen;
+		messageLen += copyIntervalPhrase(dst, numSecs, maxMessageCapacity - messageLen);
+		if (messageLen >= maxMessageLen) goto printMessage;
+		dst = message + messageLen;
+		messageLen += strlcat(dst, " (overall avg ", maxMessageCapacity - messageLen);
+		if (messageLen >= maxMessageLen) goto printMessage;
+		dst = message + messageLen;
+		messageLen += copyByteCountPhrase(dst, bytesPerSec, maxMessageCapacity - messageLen);
+		if (messageLen >= maxMessageLen) goto printMessage;
+		dst = message + messageLen;
+		messageLen += strlcat(dst, "/sec)", maxMessageCapacity - messageLen);
+		if (messageLen >= maxMessageLen) goto printMessage;
+
+	printMessage:
+		printf("%s\n", message);
 	}
 }
 static void handleSIGINFO(int const signal) {

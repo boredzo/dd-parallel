@@ -11,6 +11,7 @@
 		31BEBBD21A06A08A001E3F8F /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 31BEBBD11A06A08A001E3F8F /* Foundation.framework */; };
 		31BEBBD51A06A08A001E3F8F /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 31BEBBD41A06A08A001E3F8F /* main.m */; };
 		31BEBBD91A06A08A001E3F8F /* dd_parallel.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = 31BEBBD81A06A08A001E3F8F /* dd_parallel.1 */; };
+		31D1818028B2943300F47B82 /* PRHProgressReporter.m in Sources */ = {isa = PBXBuildFile; fileRef = 31D1817F28B2943300F47B82 /* PRHProgressReporter.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -34,6 +35,8 @@
 		31BEBBD41A06A08A001E3F8F /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		31BEBBD71A06A08A001E3F8F /* dd-parallel-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "dd-parallel-Prefix.pch"; sourceTree = "<group>"; };
 		31BEBBD81A06A08A001E3F8F /* dd_parallel.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = dd_parallel.1; sourceTree = "<group>"; };
+		31D1817E28B2943300F47B82 /* PRHProgressReporter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PRHProgressReporter.h; sourceTree = "<group>"; };
+		31D1817F28B2943300F47B82 /* PRHProgressReporter.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PRHProgressReporter.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -79,6 +82,8 @@
 				31BEBBD41A06A08A001E3F8F /* main.m */,
 				315B3FB923A35A1000290055 /* PRHMD5Context.h */,
 				315B3FBA23A35A1000290055 /* PRHMD5Context.m */,
+				31D1817E28B2943300F47B82 /* PRHProgressReporter.h */,
+				31D1817F28B2943300F47B82 /* PRHProgressReporter.m */,
 				31BEBBD81A06A08A001E3F8F /* dd_parallel.1 */,
 				31BEBBD61A06A08A001E3F8F /* Supporting Files */,
 			);
@@ -147,6 +152,7 @@
 			files = (
 				31BEBBD51A06A08A001E3F8F /* main.m in Sources */,
 				315B3FBB23A35A1000290055 /* PRHMD5Context.m in Sources */,
+				31D1818028B2943300F47B82 /* PRHProgressReporter.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

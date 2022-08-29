@@ -15,6 +15,7 @@
 #endif
 
 #import "PRHMD5Context.h"
+#import "PRHProgressReporter.h"
 
 #define MILLIONS(a,b,c) a##b##c
 //https://lists.apple.com/archives/filesystem-dev/2012/Feb/msg00015.html suggests that the optimal chunk size is somewhere between 128 KiB (USB packet size) and 1 MiB.
@@ -26,22 +27,19 @@ static const size_t kBufferSize = MILLIONS(1,048,576);
 
 static const bool verbose = false;
 
-static _Atomic NSTimeInterval whenCopyingStarted = 0.0;
 static _Atomic unsigned long long bytesCopiedSoFar = 0;
 static dispatch_queue_t writeQueue = NULL;
 static dispatch_queue_t logQueue = NULL;
+static PRHProgressReporter *sProgressReporter;
 
 static void handleSIGINFO(int signalThatWasCaught) {
 	dispatch_async(writeQueue, ^{
 		NSTimeInterval now = [NSDate timeIntervalSinceReferenceDate];
-		NSTimeInterval const localWCS = whenCopyingStarted;
-		unsigned long long const localBCSF = bytesCopiedSoFar;
+		unsigned long long const capturedBCSF = bytesCopiedSoFar;
 		dispatch_async(logQueue, ^{
-			fprintf(stderr, "Bytes copied so far: %'llu.\nTime so far: %f seconds.\nCurrent rate: %f bytes per second.\n",
-				localBCSF,
-				now - localWCS,
-				localBCSF / (now - localWCS)
-			);
+			[sProgressReporter reportProgressAsOfInstant:now
+				cumulativeBytesCopied:capturedBCSF
+				isFinal:false];
 		});
 	});
 }
@@ -113,6 +111,7 @@ int main(int argc, char *argv[]) {
 		fcntl(outFD, F_NOCACHE, 1);
 
 		__block _Atomic unsigned long long totalAmountWritten = 0;
+		sProgressReporter = [PRHProgressReporter new];
 
 		PRHMD5Context *_Nonnull const readMD5Context = [PRHMD5Context new];
 		unsigned char readMD5Digest[PRHMD5DigestNumberOfBytes] = { 0 };
@@ -213,6 +212,10 @@ int main(int argc, char *argv[]) {
 			}
 			totalAmountWritten += amtWritten;
 			bytesCopiedSoFar = totalAmountWritten;
+			NSTimeInterval const instantAfterWrite = [NSDate timeIntervalSinceReferenceDate];
+			dispatch_async(logQueue, ^{
+				[sProgressReporter recordProgressAsOfInstant:instantAfterWrite cumulativeBytesCopied:bytesCopiedSoFar];
+			});
 
 			if (thisWrite < 0) {
 				int writeError = errno;
@@ -227,7 +230,7 @@ int main(int argc, char *argv[]) {
 		};
 
 		NSTimeInterval start = [NSDate timeIntervalSinceReferenceDate];
-		whenCopyingStarted = start;
+		sProgressReporter.whenCopyingStarted = start;
 
 		ssize_t amtRead = readBlock(buffers[currentBufferIdx], readMD5Digest);
 
@@ -288,11 +291,9 @@ int main(int argc, char *argv[]) {
 		ftruncate(outFD, totalAmountWritten); //May fail if this is a device; we don't care.
 
 		NSTimeInterval end = [NSDate timeIntervalSinceReferenceDate];
-		fprintf(stderr, "Bytes copied: %'llu.\nFinal time: %f seconds.\nFinal rate: %f bytes per second.\n",
-			totalAmountWritten,
-				end - start,
-			totalAmountWritten / (end - start)
-		);
+		[sProgressReporter reportProgressAsOfInstant:end
+			cumulativeBytesCopied:totalAmountWritten
+			isFinal:true];
 
 		if (checkMD5) {
 			[readMD5Context finalizeAndGetDigestBytes:readMD5Digest];

@@ -193,7 +193,7 @@ static void *write_thread_main(void *restrict arg) {
 	pthread_rwlock_t *locks[2] = { &buffer0Lock, &buffer1Lock };
 
 	while (readerState != state_endOfFile) {
-		LOG("Reader state is %d. Waiting to write buffer %d…\n", readerState, curBufferIdx);
+		LOG("Waiting to write buffer %d (reader state is %d)…\n", curBufferIdx, readerState);
 		pthread_rwlock_wrlock(locks[curBufferIdx]);
 		writerState = state_writeBegun;
 		LOG("Writing buffer %d\n", curBufferIdx);

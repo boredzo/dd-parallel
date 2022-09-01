@@ -9,19 +9,7 @@
 //This version of dd-parallel uses no Apple-specific APIs: No dispatch, no Foundation, etc.
 //It uses pthreads, atomics, and locks to do the concurrent reading and writing.
 
-#include <sys/types.h>
-#include <stdbool.h>
-#include <sys/syslimits.h>
-#include <sys/errno.h>
-#include <sysexits.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <pthread.h>
-#include <semaphore.h>
-#include <signal.h>
-#include <stdio.h>
+//*** For system header includes, see prefix-*.h. The Xcode project uses prefix-Darwin.h, and the Makefile automatically selects one based on the output of uname.
 
 #include "formatting_utils.h"
 
@@ -37,7 +25,7 @@
 #endif
 
 typedef double time_fractional_t;
-///Returns a number of seconds since… something or other. Whatever CLOCK_UPTIME_RAW counts.
+///Returns a number of seconds since… something or other. Whatever CLOCK_THEGOODONE counts.
 static time_fractional_t timeWithFraction(void);
 
 #define MILLIONS(a,b,c) a##b##c
@@ -115,7 +103,7 @@ int main(int argc, const char * argv[]) {
 }
 
 static void *read_thread_main(void *restrict arg) {
-	pthread_setname_np("Reader thread");
+	pthread_setname_self("Reader thread");
 	if (readerState != state_beforeFirstRead) return "Reader starting in bad state";
 
 	if (pthread_mutex_lock(&initializationLock) == EDEADLK) return "Reader deadlocked on init lock";
@@ -178,7 +166,7 @@ static void *read_thread_main(void *restrict arg) {
 }
 
 static void *write_thread_main(void *restrict arg) {
-	pthread_setname_np("Writer thread");
+	pthread_setname_self("Writer thread");
 	if (writerState != state_beforeFirstRead) return "Writer starting in bad state";
 
 	if (pthread_mutex_lock(&initializationLock) == EDEADLK) return "Writer deadlocked on init lock";
@@ -225,7 +213,7 @@ static void *write_thread_main(void *restrict arg) {
 
 static time_fractional_t timeWithFraction(void) {
 	struct timespec now;
-	clock_gettime(CLOCK_UPTIME_RAW, &now);
+	clock_gettime(CLOCK_THEGOODONE, &now);
 	return now.tv_sec + now.tv_nsec / 1e9;
 }
 

@@ -39,4 +39,6 @@
 #	define SIGINFO SIGUSR1
 #endif
 
+#define pthread_setname_self(name) pthread_setname_np(pthread_self(), (name))
+
 #endif /* prefix_Linux_h */

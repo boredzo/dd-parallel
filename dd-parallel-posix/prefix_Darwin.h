@@ -25,4 +25,6 @@
 
 #define CLOCK_THEGOODONE CLOCK_UPTIME_RAW
 
+#define pthread_setname_self(name) pthread_setname_np((name))
+
 #endif /* prefix_Darwin_h */

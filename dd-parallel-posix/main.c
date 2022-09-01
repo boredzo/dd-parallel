@@ -25,7 +25,7 @@
 #endif
 
 typedef double time_fractional_t;
-///Returns a number of seconds since… something or other. Whatever CLOCK_UPTIME_RAW counts.
+///Returns a number of seconds since… something or other. Whatever CLOCK_THEGOODONE counts.
 static time_fractional_t timeWithFraction(void);
 
 #define MILLIONS(a,b,c) a##b##c
@@ -213,7 +213,7 @@ static void *write_thread_main(void *restrict arg) {
 
 static time_fractional_t timeWithFraction(void) {
 	struct timespec now;
-	clock_gettime(CLOCK_UPTIME_RAW, &now);
+	clock_gettime(CLOCK_THEGOODONE, &now);
 	return now.tv_sec + now.tv_nsec / 1e9;
 }
 

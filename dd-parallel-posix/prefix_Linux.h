@@ -9,6 +9,8 @@
 #ifndef prefix_Linux_h
 #define prefix_Linux_h
 
+#define _GNU_SOURCE 1
+
 #include <sys/types.h>
 #include <stdbool.h>
 #include <limits.h>

@@ -56,6 +56,8 @@
 		3125057728BC629400F9060E /* formatting_utils.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = formatting_utils.c; sourceTree = "<group>"; };
 		3125057D28BC636900F9060E /* dd-parallel-posix-tests */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "dd-parallel-posix-tests"; sourceTree = BUILT_PRODUCTS_DIR; };
 		3125057F28BC636900F9060E /* test.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = test.c; sourceTree = "<group>"; };
+		3125058528C1541B00F9060E /* prefix_Darwin.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = prefix_Darwin.h; sourceTree = "<group>"; };
+		3125058628C1544700F9060E /* prefix_Linux.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = prefix_Linux.h; sourceTree = "<group>"; };
 		315B3FB923A35A1000290055 /* PRHMD5Context.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PRHMD5Context.h; sourceTree = "<group>"; };
 		315B3FBA23A35A1000290055 /* PRHMD5Context.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PRHMD5Context.m; sourceTree = "<group>"; };
 		31BEBBCE1A06A08A001E3F8F /* dd-parallel */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "dd-parallel"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -99,6 +101,8 @@
 				3125057128BBF9A300F9060E /* main.c */,
 				3125057628BC629400F9060E /* formatting_utils.h */,
 				3125057728BC629400F9060E /* formatting_utils.c */,
+				3125058528C1541B00F9060E /* prefix_Darwin.h */,
+				3125058628C1544700F9060E /* prefix_Linux.h */,
 			);
 			path = "dd-parallel-posix";
 			sourceTree = "<group>";
@@ -304,6 +308,8 @@
 				DEVELOPMENT_TEAM = FX6BN52BK9;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "dd-parallel-posix/prefix_Darwin.h";
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				MACOSX_DEPLOYMENT_TARGET = 12.3;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
@@ -327,6 +333,8 @@
 				DEVELOPMENT_TEAM = FX6BN52BK9;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "dd-parallel-posix/prefix_Darwin.h";
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				MACOSX_DEPLOYMENT_TARGET = 12.3;
 				MTL_ENABLE_DEBUG_INFO = NO;

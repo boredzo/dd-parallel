@@ -9,19 +9,7 @@
 //This version of dd-parallel uses no Apple-specific APIs: No dispatch, no Foundation, etc.
 //It uses pthreads, atomics, and locks to do the concurrent reading and writing.
 
-#include <sys/types.h>
-#include <stdbool.h>
-#include <sys/syslimits.h>
-#include <sys/errno.h>
-#include <sysexits.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <pthread.h>
-#include <semaphore.h>
-#include <signal.h>
-#include <stdio.h>
+//*** For system header includes, see prefix-*.h. The Xcode project uses prefix-Darwin.h, and the Makefile automatically selects one based on the output of uname.
 
 #include "formatting_utils.h"
 

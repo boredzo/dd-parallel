@@ -59,6 +59,15 @@ static enum {
 	state_writeFailed,
 } _Atomic writerState;
 
+enum {
+	readErrorMaxLength = 255,
+	readErrorCapacity,
+	writeErrorMaxLength = 255,
+	writeErrorCapacity,
+};
+char readErrorBuffer[readErrorCapacity] = { 0 };
+char writeErrorBuffer[writeErrorCapacity] = { 0 };
+
 static void logProgress(bool const isFinal);
 static void handleSIGINFO(int const signal);
 static void *read_thread_main(void *restrict arg);
@@ -89,9 +98,21 @@ int main(int argc, const char * argv[]) {
 
 	signal(SIGINFO, handleSIGINFO);
 
+	int status = EXIT_SUCCESS;
+
 	void *_Nullable retval;
 	pthread_join(read_thread, &retval);
+	if (retval != NULL) {
+		char const *_Nonnull const readErrorStr = retval;
+		fprintf(stderr, "dd-parallel: error during read: %s\n", readErrorStr);
+		status = EX_NOINPUT;
+	}
 	pthread_join(write_thread, &retval);
+	if (retval != NULL) {
+		char const *_Nonnull const writeErrorStr = retval;
+		fprintf(stderr, "dd-parallel: error during write: %s\n", writeErrorStr);
+		if (status == EXIT_SUCCESS) status = EX_IOERR;
+	}
 	free(buffer1);
 	free(buffer0);
 
@@ -99,7 +120,7 @@ int main(int argc, const char * argv[]) {
 	copyFinishedTime = timeWithFraction();
 	logProgress(true);
 
-	return EXIT_SUCCESS;
+	return status;
 }
 
 static void *read_thread_main(void *restrict arg) {
@@ -147,6 +168,7 @@ static void *read_thread_main(void *restrict arg) {
 			readerState = state_readFinished;
 		} else {
 			LOG("Read failure\n");
+			strerror_r(errno, readErrorBuffer, readErrorMaxLength);
 			readerState = state_readFailed;
 		}
 		LOG("Finished reading buffer %d\n", nextBufferIdx);
@@ -162,7 +184,7 @@ static void *read_thread_main(void *restrict arg) {
 		nextBufferIdx = !mostRecentlyReadBuffer;
 	}
 	LOG("Read loop exiting\n");
-	return readerState == state_readFailed ? "Reader failed" : NULL;
+	return readerState == state_readFailed ? readErrorBuffer : NULL;
 }
 
 static void *write_thread_main(void *restrict arg) {
@@ -192,7 +214,9 @@ static void *write_thread_main(void *restrict arg) {
 			if (amtWritten < 0) {
 				writerState = state_writeFailed;
 				LOG("Write failure");
-				return "Failed write";
+				pthread_rwlock_unlock(locks[curBufferIdx]);
+				strerror_r(errno, writeErrorBuffer, writeErrorMaxLength);
+				return writeErrorBuffer;
 			}
 			offset += amtWritten;
 			totalAmountCopied += amtWritten;

@@ -1,7 +1,7 @@
 CC=clang
 os_name=$(shell uname)
 prefix_name="prefix_${os_name}.h"
-CFLAGS=-include dd-parallel-posix/${prefix_name}
+CFLAGS=-g -include dd-parallel-posix/${prefix_name}
 LDFLAGS=-pthread -lm 
 ifeq ($(os_name),Linux)
 LDFLAGS+=-lbsd

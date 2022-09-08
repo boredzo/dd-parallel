@@ -1,5 +1,5 @@
 CC=clang
-os_name="$(shell uname)"
+os_name=$(shell uname)
 prefix_name="prefix_${os_name}.h"
 CFLAGS=-include dd-parallel-posix/${prefix_name}
 LDFLAGS=-pthread -lm 

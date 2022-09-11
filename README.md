@@ -44,3 +44,11 @@ There is one option, `--md5`. This is a self-test that verifies that dd-parallel
 While the copy is in progress, you can send it a SIGINFO signal by pressing ctrl-T. This will cause it to write out a report of how much data it has written and how fast it's going. The format for this is not final but is definitely not going to match dd.
 
 dd-parallel will also write out a similar report when it finishes.
+
+## How do I compile it?
+
+On macOS, open the Xcode project and build the dd-parallel scheme. Or, use `xcodebuild -scheme dd-parallel`.
+
+On Linux, `make` should do the right thing. (This also works on macOS. It will build the POSIX threads implementation rather than the Cocoa implementation.)
+
+This code hasn't been tested on other platforms. I've tested it on macOS and Linux and nothing else; if you want to add support for something else, such as BSD, you'll need to add a new prefix header in the dd-parallel-posix directory. Please submit a patch.

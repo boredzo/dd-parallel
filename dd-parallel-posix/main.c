@@ -42,6 +42,7 @@ static bool _Atomic buffer0Dirty = true, buffer1Dirty = true; //true when there 
 static size_t _Atomic buffer0Len = 1, buffer1Len = 1; //How much data was most recently read into each buffer.
 static pthread_mutex_t initializationLock = PTHREAD_ERRORCHECK_MUTEX_INITIALIZER;
 static pthread_rwlock_t buffer0Lock = PTHREAD_RWLOCK_INITIALIZER, buffer1Lock = PTHREAD_RWLOCK_INITIALIZER;
+//The generation counts—which, as you can see here, are per-buffer—are used to prevent each loop from getting too far ahead of the other. Reading will only proceed when the last write generation is equal to the last read generation; the new read will be the next read generation. Writing will only proceed when the last write generation is one behind the last read generation; the new write, being the next write generation, will catch up to the last read generation.
 static unsigned long _Atomic readGeneration0 = 0, readGeneration1 = 0;
 static unsigned long _Atomic writeGeneration0 = 0, writeGeneration1 = 0;
 static int _Atomic mostRecentlyReadBuffer = -1;

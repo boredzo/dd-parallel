@@ -97,7 +97,12 @@ int main(int argc, const char * argv[]) {
 
 	pthread_create(&write_thread, /*attr*/ NULL, write_thread_main, /*user data*/ NULL);
 
-	signal(SIGINFO, handleSIGINFO);
+	struct sigaction onSIGINFO = {
+		.sa_handler = handleSIGINFO,
+		.sa_mask = 0,
+		.sa_flags = SA_RESTART,
+	};
+	sigaction(SIGINFO, &onSIGINFO, /*outPrevious*/ NULL);
 
 	int status = EXIT_SUCCESS;
 

@@ -149,13 +149,24 @@ static void *read_thread_main(void *restrict arg) {
 	void *_Nonnull buffers[2] = { buffer0, buffer1 };
 	size_t _Atomic *lengths[2] = { &buffer0Len, &buffer1Len };
 	bool _Atomic *dirtyBits[2] = { &buffer0Dirty, &buffer1Dirty };
-	unsigned long _Atomic *generations[2] = { &readGeneration0, &readGeneration1 };
+	unsigned long _Atomic *readGenerations[2] = { &readGeneration0, &readGeneration1 };
+	unsigned long _Atomic *writeGenerations[2] = { &writeGeneration0, &writeGeneration1 };
 	pthread_rwlock_t *locks[2] = { &buffer0Lock, &buffer1Lock };
 	int nextBufferIdx = !mostRecentlyReadBuffer;
 
 	while (readResult > 0) {
 		LOG("Waiting to read into buffer %d…\n", nextBufferIdx);
 		pthread_rwlock_rdlock(locks[nextBufferIdx]);
+		unsigned long const curReadGen = *readGenerations[nextBufferIdx];
+		unsigned long const curWriteGen = *writeGenerations[nextBufferIdx];
+		LOG("Reader generation check: Read gen %lu, write gen %lu\n", curReadGen, curWriteGen);
+		if (curReadGen == curWriteGen + 1) {
+			//The write of our last read hasn't finished yet. Hold off.
+			LOG("Write generation has not advanced. Reader coming around again for another pass...\n");
+			pthread_rwlock_unlock(locks[nextBufferIdx]);
+			sleep(0);
+			continue;
+		}
 		LOG("Reading into buffer %d\n", nextBufferIdx);
 
 		readerState = state_readBegun;
@@ -163,7 +174,7 @@ static void *read_thread_main(void *restrict arg) {
 		readResult = read(inputFD, buffers[nextBufferIdx], kBufferSize);
 		if (readResult >= 0) {
 			*lengths[nextBufferIdx] = readResult;
-			++*(generations[nextBufferIdx]);
+			++*(readGenerations[nextBufferIdx]);
 			mostRecentlyReadBuffer = nextBufferIdx;
 			readerState = state_readFinished;
 		} else {
@@ -171,7 +182,7 @@ static void *read_thread_main(void *restrict arg) {
 			strerror_r(errno, readErrorBuffer, readErrorMaxLength);
 			readerState = state_readFailed;
 		}
-		LOG("Finished reading buffer %d\n", nextBufferIdx);
+		LOG("Finished reading buffer %d. This is read generation %lu, chunk #%s\n", nextBufferIdx, *readGenerations[nextBufferIdx], (char const *const)buffers[nextBufferIdx]);
 		if (readResult == 0) {
 			readerState = state_endOfFile;
 			LOG("Read loop reached end of input file\n");
@@ -205,8 +216,19 @@ static void *write_thread_main(void *restrict arg) {
 	while (readerState != state_endOfFile) {
 		LOG("Waiting to write buffer %d (reader state is %d)…\n", curBufferIdx, readerState);
 		pthread_rwlock_wrlock(locks[curBufferIdx]);
+		unsigned long const curReadGen = *readGenerations[curBufferIdx];
+		unsigned long const curWriteGen = *writeGenerations[curBufferIdx];
+		LOG("Writer generation check: Read gen %lu, write gen %lu\n", curReadGen, curWriteGen);
+		if (curReadGen == curWriteGen) {
+			//We lapped the read loop. Wait for it to catch up.
+			LOG("Read generation has not advanced. Writer coming around again for another pass...\n");
+			pthread_rwlock_unlock(locks[curBufferIdx]);
+			sleep(0);
+			continue;
+		}
+
 		writerState = state_writeBegun;
-		LOG("Writing buffer %d\n", curBufferIdx);
+		LOG("Writing buffer %d, which is chunk #%s\n", curBufferIdx, (char const *const)buffers[curBufferIdx]);
 		ssize_t offset = 0;
 		size_t const amtToWrite = *lengths[curBufferIdx];
 		while (offset < amtToWrite) {
@@ -223,13 +245,13 @@ static void *write_thread_main(void *restrict arg) {
 		}
 		*dirtyBits[curBufferIdx] = false;
 		LOG("Finished writing buffer %d. This is write generation %lu, chunk #%s\n", curBufferIdx, *writeGenerations[curBufferIdx], (char const *const)buffers[curBufferIdx]);
-		int const nextBufferIdx = !curBufferIdx;
 		++*writeGenerations[curBufferIdx];
+		int const nextBufferIdx = !curBufferIdx;
 		writerState = state_writeFinished;
 		pthread_rwlock_unlock(locks[curBufferIdx]);
 		curBufferIdx = nextBufferIdx;
 	}
-	LOG("Write loop exiting because readerState is %d", readerState);
+	LOG("Write loop exiting because readerState is %d\n", readerState);
 	return NULL;
 }
 

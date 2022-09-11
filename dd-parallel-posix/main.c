@@ -142,7 +142,7 @@ static void *read_thread_main(void *restrict arg) {
 	} else {
 		readerState = state_readFailed;
 	}
-	LOG("Finished reading into buffer %d\n", 0);
+	LOG("Finished reading into buffer %d", 0);
 	pthread_rwlock_unlock(&buffer0Lock);
 	pthread_mutex_unlock(&initializationLock);
 
@@ -222,7 +222,7 @@ static void *write_thread_main(void *restrict arg) {
 			totalAmountCopied += amtWritten;
 		}
 		*dirtyBits[curBufferIdx] = false;
-		LOG("Finished writing buffer %d\n", curBufferIdx);
+		LOG("Finished writing buffer %d. This is write generation %lu, chunk #%s\n", curBufferIdx, *writeGenerations[curBufferIdx], (char const *const)buffers[curBufferIdx]);
 		int const nextBufferIdx = !curBufferIdx;
 		++*writeGenerations[curBufferIdx];
 		writerState = state_writeFinished;

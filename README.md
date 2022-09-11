@@ -1,11 +1,11 @@
 # dd-parallel
-## A fast parallelized block copier for macOS
+## A fast parallelized block copier
 
 When you want to duplicate an entire drive, you use a block copier like dd that's capable of reading and writing device files and that specializes in streaming data from one to the other.
 
-The dd implementation that comes with macOS is implemented as a sequential read-write loop: read, then write, then read, then write, and so on. While this is simple, it is inefficient—the time that dd spends reading is time that could also be spent writing.
+dd (at least the implementation that comes with macOS) is implemented as a sequential read-write loop: read, then write, then read, then write, and so on. While this is simple, it is inefficient—the time that dd spends reading is time that could also be spent writing.
 
-dd-parallel is a new block copier that uses GCD to do reading and writing at the same time in order to deliver faster throughput than the system dd.
+dd-parallel is a new block copier that uses GCD (macOS version) or threads (POSIX version) to do reading and writing at the same time in order to deliver faster throughput than the system dd.
 
 ## How much faster is it?
 
@@ -33,7 +33,9 @@ The usage is:
 
 	dd-parallel in-file out-file
 	
-in-file and out-file are normally device files such as `/dev/rdisk1`. I recommend always using `rdisk1` rather than `disk1` when pointing dd-parallel (or dd for that matter) at such files, because `disk1` has a kernel buffer in front of it that severely diminishes performance. (It's not meant for this use case.) `rdisk1` accesses the device more directly.
+in-file and out-file are normally device files such as `/dev/rdisk1`.
+
+macOS note: I recommend always using `rdisk1` rather than `disk1` when pointing dd-parallel (or dd for that matter) at such files, because `disk1` has a kernel buffer in front of it that severely diminishes performance. (It's not meant for this use case.) `rdisk1` accesses the device more directly.
 
 **BE VERY CAREFUL WHICH PATHS YOU GIVE IT.** If you are not ABSOLUTELY SURE you've got the right paths, don't use it. Like dd, this is an ion cannon that can and will destroy your data if you point it in the wrong direction.
 
@@ -42,3 +44,11 @@ There is one option, `--md5`. This is a self-test that verifies that dd-parallel
 While the copy is in progress, you can send it a SIGINFO signal by pressing ctrl-T. This will cause it to write out a report of how much data it has written and how fast it's going. The format for this is not final but is definitely not going to match dd.
 
 dd-parallel will also write out a similar report when it finishes.
+
+## How do I compile it?
+
+On macOS, open the Xcode project and build the dd-parallel scheme. Or, use `xcodebuild -scheme dd-parallel`.
+
+On Linux, `make` should do the right thing. (This also works on macOS. It will build the POSIX threads implementation rather than the Cocoa implementation.)
+
+This code hasn't been tested on other platforms. I've tested it on macOS and Linux and nothing else; if you want to add support for something else, such as BSD, you'll need to add a new prefix header in the dd-parallel-posix directory. Please submit a patch.

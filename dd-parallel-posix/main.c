@@ -35,7 +35,7 @@ static time_fractional_t timeWithFraction(void);
 static const size_t kBufferSize = MILLIONS(1,048,576);
 
 static time_fractional_t copyStartedTime, copyFinishedTime;
-static unsigned long long totalAmountCopied = 0;
+static unsigned long long _Atomic totalAmountCopied = 0;
 static int inputFD, outputFD;
 static void *buffer0, *buffer1;
 static bool _Atomic buffer0Dirty = true, buffer1Dirty = true; //true when there is data here that has not been written. Set to false by the writer and set to true again by the writer. When both are false, the writer thread exits.

@@ -49,6 +49,6 @@ dd-parallel will also write out a similar report when it finishes.
 
 On macOS, open the Xcode project and build the dd-parallel scheme. Or, use `xcodebuild -scheme dd-parallel`.
 
-On Linux, you will need to install 'libbsd-dev'. Then, `./configure` followed by `make` should do the right thing. (This also works on macOS. It will build the POSIX threads implementation rather than the Cocoa implementation.)
+On Linux, you will need to install `libbsd-dev`. Then, `./configure` followed by `make` should do the right thing. (This also works on macOS. It will build the POSIX threads implementation rather than the Cocoa implementation.)
 
 This code hasn't been tested on other platforms. I've tested it on macOS and Linux and nothing else; if you want to add support for something else, such as BSD, you'll need to add a new prefix header in the dd-parallel-posix directory, and possibly make additions to `configure`. (I don't use autoconf, so this is a hand-written `configure` that should be much easier to directly edit.) Please submit a patch.

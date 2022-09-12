@@ -221,7 +221,7 @@ static void *write_thread_main(void *restrict arg) {
 
 	unsigned long capturedRG0 = *readGenerations[0], capturedRG1 = *readGenerations[1];
 	unsigned long capturedWG0 = *writeGenerations[0], capturedWG1 = *writeGenerations[1];
-	while (capturedWG0 < capturedRG0 || capturedWG1 < capturedRG1) {
+	while (readerState != state_endOfFile || capturedWG0 < capturedRG0 || capturedWG1 < capturedRG1) {
 		LOG("Waiting to write buffer %d (reader state is %d)…\n", curBufferIdx, readerState);
 		pthread_rwlock_wrlock(locks[curBufferIdx]);
 		unsigned long const curReadGen = *readGenerations[curBufferIdx];

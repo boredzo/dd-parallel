@@ -1,4 +1,5 @@
 CC=clang
+LD=clang
 os_name=$(shell uname)
 prefix_name="prefix_${os_name}.h"
 CFLAGS=-g -include dd-parallel-posix/${prefix_name}
@@ -8,6 +9,6 @@ LDFLAGS+=-lbsd
 endif
 
 bin/dd-parallel: bin dd-parallel-posix/main.o dd-parallel-posix/formatting_utils.o
-	clang $(LDFLAGS) dd-parallel-posix/main.o dd-parallel-posix/formatting_utils.o -o $@
+	$(LD) dd-parallel-posix/main.o dd-parallel-posix/formatting_utils.o $(LDFLAGS) -o $@
 bin:
 	mkdir $@

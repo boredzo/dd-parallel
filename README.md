@@ -39,9 +39,9 @@ macOS note: I recommend always using `rdisk1` rather than `disk1` when pointing 
 
 **BE VERY CAREFUL WHICH PATHS YOU GIVE IT.** If you are not ABSOLUTELY SURE you've got the right paths, don't use it. Like dd, this is an ion cannon that can and will destroy your data if you point it in the wrong direction.
 
-There is one option, `--md5`. This is a self-test that verifies that dd-parallel is writing what it should be. It is *not* a verification of the bits on disk. Feel free to use it to test that dd-parallel is not mixing up data (particularly if you make any changes to the source code that affect the parallelism), but don't expect it to verify writes—it does not do that.
+[Currently macOS only] There is one option, `--md5`. This is a self-test that verifies that dd-parallel is writing what it should be. It is *not* a verification of the bits on disk. Feel free to use it to test that dd-parallel is not mixing up data (particularly if you make any changes to the source code that affect the parallelism), but don't expect it to verify writes—it does not do that.
 
-While the copy is in progress, you can send it a SIGINFO signal by pressing ctrl-T. This will cause it to write out a report of how much data it has written and how fast it's going. The format for this is not final but is definitely not going to match dd.
+On macOS, while the copy is in progress, you can send it a SIGINFO signal by pressing ctrl-T. This will cause it to write out a report of how much data it has written and how fast it's going. The format for this is not final but is definitely not going to match dd. On Linux, SIGUSR1 will achieve the same result; you'll have to send it using kill or killall manually, since Linux has no equivalent to ctrl-T.
 
 dd-parallel will also write out a similar report when it finishes.
 

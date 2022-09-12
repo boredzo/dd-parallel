@@ -19,11 +19,6 @@
 #	define LOG(...) if (0) 0
 #endif
 
-#if ! __has_extension(nullability)
-#	define _Nonnull /*non-null*/
-#	define _Nullable /*nullable*/
-#endif
-
 typedef double time_fractional_t;
 ///Returns a number of seconds since… something or other. Whatever CLOCK_THEGOODONE counts.
 static time_fractional_t timeWithFraction(void);

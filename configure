@@ -1,0 +1,64 @@
+#!/bin/bash -f
+
+echo -n 'Checking for Clang... '
+if (which clang >/dev/null 2>&1); then
+	compiler=clang
+	linker=clang
+	echo 'yes'
+else
+	compiler=gcc
+	linker=gcc
+	echo 'no'
+fi
+
+echo -n 'Checking for strlcpy/strlcat without extra libraries... '
+cat >strlcpy_test_src.c <<SRC
+#include "string.h"
+int main(void) {
+	char buf[256] = "";
+	strlcpy(buf, "Test string", 256);
+	return 0;
+}
+SRC
+
+base_ldflags='-pthread -lm'
+has_strlcpy=
+if (${compiler} -x c -o tmp.exe strlcpy_test_src.c >/dev/null 2>&1); then
+	echo 'yes'
+	has_strlcpy=yes
+	additional_ldflags=''
+else
+	echo 'no'
+	echo -n 'Checking for strlcpy/strlcat with -lbsd... '
+	if (${compiler} -x c -lbsd -o tmp.exe strlcpy_test_src.c >/dev/null 2>&1); then
+		echo 'yes'
+		has_strlcpy=yes
+		additional_ldflags='-lbsd'
+	else
+		echo 'no'
+	fi
+fi
+rm -f strlcpy_test_src.c tmp.exe >/dev/null 2>&1 || true
+if [[ -z "$has_strlcpy" ]]; then
+	echo 'strlcpy/strlcat are missing. You may need to install libbsd-dev.' >&2
+	exit 1
+fi
+
+echo -n 'Checking platform name... '
+os_name="$(uname)"
+prefix_name="prefix_${os_name}.h"
+prefix_path="dd-parallel-posix/$prefix_name"
+if [[ -f "$prefix_path" ]]; then
+	echo $os_name
+else
+	echo "$os_name (never heard of it; can't build for it)"
+	exit 1
+fi
+
+echo >Makefile.defs
+echo "compiler=${compiler}" >>Makefile.defs
+echo "linker=${linker}" >>Makefile.defs
+echo "os_name=${os_name}" >>Makefile.defs
+echo "prefix_name=${prefix_name}" >>Makefile.defs
+echo "cflags=-g -include ${prefix_path}" >>Makefile.defs
+echo "ldflags=${base_ldflags} ${additional_ldflags}" >>Makefile.defs

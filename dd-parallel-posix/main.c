@@ -36,6 +36,7 @@ static void *buffer0, *buffer1;
 static bool _Atomic buffer0Dirty = true, buffer1Dirty = true; //true when there is data here that has not been written. Set to false by the writer and set to true again by the writer. When both are false, the writer thread exits.
 static size_t _Atomic buffer0Len = 1, buffer1Len = 1; //How much data was most recently read into each buffer.
 static pthread_mutex_t initializationLock = PTHREAD_ERRORCHECK_MUTEX_INITIALIZER;
+static bool _Atomic readerHasInitialized = false;
 static pthread_rwlock_t buffer0Lock = PTHREAD_RWLOCK_INITIALIZER, buffer1Lock = PTHREAD_RWLOCK_INITIALIZER;
 //The generation counts—which, as you can see here, are per-buffer—are used to prevent each loop from getting too far ahead of the other. Reading will only proceed when the last write generation is equal to the last read generation; the new read will be the next read generation. Writing will only proceed when the last write generation is one behind the last read generation; the new write, being the next write generation, will catch up to the last read generation.
 static unsigned long _Atomic readGeneration0 = 0, readGeneration1 = 0;
@@ -145,6 +146,7 @@ static void *read_thread_main(void *restrict arg) {
 	}
 	LOG("Finished reading into buffer %d", 0);
 	pthread_rwlock_unlock(&buffer0Lock);
+	readerHasInitialized = true;
 	pthread_mutex_unlock(&initializationLock);
 
 	void *_Nonnull buffers[2] = { buffer0, buffer1 };
@@ -203,8 +205,11 @@ static void *write_thread_main(void *restrict arg) {
 	pthread_setname_self("Writer thread");
 	if (writerState != state_beforeFirstWrite) return "Writer starting in bad state";
 
-	if (pthread_mutex_lock(&initializationLock) == EDEADLK) return "Writer deadlocked on init lock";
-	pthread_mutex_unlock(&initializationLock);
+	while (! readerHasInitialized ) {
+		if (pthread_mutex_lock(&initializationLock) == EDEADLK) return "Writer deadlocked on init lock";
+		pthread_mutex_unlock(&initializationLock);
+		sleep(0);
+	}
 
 	int curBufferIdx = mostRecentlyReadBuffer;
 	void *_Nonnull buffers[2] = { buffer0, buffer1 };

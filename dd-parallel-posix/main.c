@@ -144,7 +144,7 @@ static void *read_thread_main(void *restrict arg) {
 	} else {
 		readerState = state_readFailed;
 	}
-	LOG("Finished reading into buffer %d", 0);
+	LOG("Finished reading into buffer %d\n", 0);
 	pthread_rwlock_unlock(&buffer0Lock);
 	readerHasInitialized = true;
 	pthread_mutex_unlock(&initializationLock);

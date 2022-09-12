@@ -201,7 +201,7 @@ static void *read_thread_main(void *restrict arg) {
 
 static void *write_thread_main(void *restrict arg) {
 	pthread_setname_self("Writer thread");
-	if (writerState != state_beforeFirstRead) return "Writer starting in bad state";
+	if (writerState != state_beforeFirstWrite) return "Writer starting in bad state";
 
 	if (pthread_mutex_lock(&initializationLock) == EDEADLK) return "Writer deadlocked on init lock";
 	pthread_mutex_unlock(&initializationLock);

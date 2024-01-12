@@ -212,7 +212,7 @@ static void *write_thread_main(void *restrict arg) {
 		sleep(0);
 	}
 
-	int curBufferIdx = mostRecentlyReadBuffer;
+	int curBufferIdx = 0;
 	void *_Nonnull buffers[2] = { buffer0, buffer1 };
 	size_t _Atomic *lengths[2] = { &buffer0Len, &buffer1Len };
 	bool _Atomic *dirtyBits[2] = { &buffer0Dirty, &buffer1Dirty };

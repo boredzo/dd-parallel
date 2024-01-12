@@ -289,6 +289,10 @@ int main(int argc, char *argv[]) {
 		}
 
 		ftruncate(outFD, totalAmountWritten); //May fail if this is a device; we don't care.
+		close(inFD);
+		close(outFD);
+		free(buffers[0]);
+		free(buffers[1]);
 
 		NSTimeInterval end = [NSDate timeIntervalSinceReferenceDate];
 		[sProgressReporter reportProgressAsOfInstant:end

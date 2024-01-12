@@ -77,6 +77,14 @@ int main(int argc, const char * argv[]) {
 	outputFD = open(argv[2], O_WRONLY | O_CREAT, 0644);
 	if (outputFD < 0) return EX_CANTCREAT;
 
+#if EXISTS_F_RDAHEAD
+	fcntl(inputFD, F_RDAHEAD, 1);
+#endif
+#if EXISTS_F_NOCACHE
+	fcntl(inputFD, F_NOCACHE, 1);
+	fcntl(outputFD, F_NOCACHE, 1);
+#endif
+
 	readerState = state_beforeFirstRead;
 	writerState = state_beforeFirstWrite;
 	buffer0 = malloc(kBufferSize);

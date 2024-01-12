@@ -41,6 +41,9 @@
 
 #define pthread_setname_self(name) pthread_setname_np(pthread_self(), (name))
 
+#define EXISTS_F_RDAHEAD 0
+#define EXISTS_F_NOCACHE 0
+
 //Clang predefines __nonnull to _Nonnull and __nullable to _Nullable. GCC doesn't define __nullable at all, but defines __nonnull as a function-like macro, which it uses in its stock headers.
 //So, for Clang compatibility, we use _Nonnull and _Nullable (which are the favored forms anyway), and for GCC compatibility, we define those here whenever __nullable is not defined.
 #ifndef __nullable

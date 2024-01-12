@@ -27,4 +27,7 @@
 
 #define pthread_setname_self(name) pthread_setname_np((name))
 
+#define EXISTS_F_RDAHEAD 1
+#define EXISTS_F_NOCACHE 1
+
 #endif /* prefix_Darwin_h */

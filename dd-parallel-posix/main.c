@@ -118,6 +118,7 @@ int main(int argc, const char * argv[]) {
 	free(buffer1);
 	free(buffer0);
 
+	fflush(stderr);
 	ftruncate(outputFD, totalAmountCopied);
 	copyFinishedTime = timeWithFraction();
 	logProgress(true);
